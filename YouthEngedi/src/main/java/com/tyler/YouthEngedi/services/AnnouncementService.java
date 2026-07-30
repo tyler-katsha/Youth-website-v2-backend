@@ -89,11 +89,6 @@ public class AnnouncementService {
 
         for(Event event:events){
 
-            LocalDate day = event.getEventDate();
-            LocalTime time = LocalTime.MIDNIGHT;
-
-            LocalDateTime expiresAt = LocalDateTime.of(day,time);
-
             Announcement announcement = Announcement
                     .builder()
                     .event(event)
@@ -102,7 +97,7 @@ public class AnnouncementService {
                     .type(AnnouncementType.EVENT)
                     .createdAt(LocalDateTime.now())
                     .title(event.getTitle())
-                    .expiresAt(expiresAt)
+                    .expiresAt(TimeUtils.getExpiresAt(event.getEventDate()))
                     .build();
 
             announcementRepository.save(announcement);
