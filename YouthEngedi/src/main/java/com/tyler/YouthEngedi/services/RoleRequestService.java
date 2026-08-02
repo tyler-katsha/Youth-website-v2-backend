@@ -38,7 +38,6 @@ public class RoleRequestService {
     @Autowired
     private RoleRequestMapper roleRequestMapper;
 
-    @RateLimited(capacity = 5,refillTokens = 5,refillDuration = "15m",key="findAllRoleRequests")
     @LogExecutionTime(value="Fetch all roleRequests in RoleRequestService class",doSave = false)
     public ResponseEntity<Page<RoleChangeRequest>> findAllRoleRequests(int page, int size) {
 
@@ -48,8 +47,7 @@ public class RoleRequestService {
 
         return ResponseEntity.ok(roleChangeRequests);
     }
-    @RateLimited(capacity = 5,refillTokens = 5,refillDuration = "15m",key="sendRoleRequest")
-    @AuditAction("Sent a role request to developer")
+
     @LogExecutionTime(value="Sent a role request to developer in RoleRequestService class",doSave = false)
     public ResponseEntity<?> sendRoleRequest(long userId) {
         try{
@@ -67,7 +65,6 @@ public class RoleRequestService {
 
     }
 
-    @RateLimited(capacity = 2,refillTokens = 1,refillDuration = "120m",key="requestUpgrade")
     @LogExecutionTime(value="Building role request and updating user status in RoleUpgradeService class",doSave = false)
     public void requestUpgrade(User user){
 
@@ -215,7 +212,6 @@ public class RoleRequestService {
         repository.save(request);
     }
 
-    @RateLimited(capacity = 2,refillTokens = 1,refillDuration = "120m",key="requestUpgrade")
     @LogExecutionTime(value="Building role request and updating user status in RoleUpgradeService class",doSave = false)
     public void updateRequest(RoleChangeRequest request){
 

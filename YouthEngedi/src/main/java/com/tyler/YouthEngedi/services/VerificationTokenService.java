@@ -19,6 +19,7 @@ import java.util.concurrent.CompletableFuture;
 @Service
 public class VerificationTokenService {
     private final static Logger logger = LogManager.getLogger(VerificationTokenService.class);
+
     @Autowired
     private VerificationTokenRepository verificationTokenRepository;
     @Autowired
@@ -47,6 +48,7 @@ public class VerificationTokenService {
             }
         });
     }
+
     public void resendVerification(String email){
         String token = UUID.randomUUID().toString();
 

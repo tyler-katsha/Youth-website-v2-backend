@@ -27,7 +27,6 @@ public class SocialLoginService {
     @Autowired
     private CookieService cookieService;
 
-    @RateLimited(capacity = 5,refillTokens = 5,refillDuration = "15m",key="socialLogin")
     @LogExecutionTime(value="Login with OAuth2.0 authentication",doSave = false)
     public ResponseEntity<?> socialLogin(SocialLoginRequest request){
 
@@ -39,7 +38,7 @@ public class SocialLoginService {
 
         return ResponseEntity.ok().header(HttpHeaders.SET_COOKIE,cookieService.issueToken(token)).body("Login Successfully");
     }
-    @RateLimited(capacity = 5,refillTokens = 5,refillDuration = "15m",key="verifyAndGetEmail")
+
     private String verifyAndGetEmail(SocialLoginRequest request) {
         return switch (request.getProvider().toUpperCase()){
             case "GOOGLE" -> verifyGoogle(request.getToken());
@@ -48,7 +47,7 @@ public class SocialLoginService {
             default -> throw new IllegalArgumentException("Unknown Provider");
         };
     }
-    @RateLimited(capacity = 5,refillTokens = 5,refillDuration = "15m",key="verifyGoogle")
+
     @LogExecutionTime(value="Verifying Google account in SocialLoginService class",doSave = false)
     private String verifyGoogle(String token) {
         try{
@@ -68,7 +67,7 @@ public class SocialLoginService {
             throw new VerificationException("Unable to verify Google account: " + e.getMessage());
         }
     }
-    @RateLimited(capacity = 5,refillTokens = 5,refillDuration = "15m",key="verifyFacebook")
+
     @LogExecutionTime(value="Verifying Facebook account in SocialLoginService class",doSave = false)
     private String verifyFacebook(String token) {
         try{
@@ -79,7 +78,7 @@ public class SocialLoginService {
             throw new VerificationException("Unable to verify Facebook account");
         }
     }
-    @RateLimited(capacity = 5,refillTokens = 5,refillDuration = "15m",key="verifyInstagram")
+
     @LogExecutionTime(value="Verifying Instagram account in SocialLoginService class",doSave = false)
     private String verifyInstagram(String token) {
         try{
@@ -91,8 +90,6 @@ public class SocialLoginService {
         }
     }
 
-
-    @RateLimited(capacity = 2,refillTokens = 2,refillDuration = "2m",key="registerNewUser")
     private User registerNewUser(String email){
 
         User newUser = User

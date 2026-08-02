@@ -36,6 +36,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         try{
             String token = extractToken(request);
+
             if(token != null) {
 
                 long userId = jwtTokenProvider.extractUserId(token);
@@ -54,8 +55,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             }
         } catch (Exception e){
             SecurityContextHolder.clearContext();
-
-            e.printStackTrace();
         }
 
 

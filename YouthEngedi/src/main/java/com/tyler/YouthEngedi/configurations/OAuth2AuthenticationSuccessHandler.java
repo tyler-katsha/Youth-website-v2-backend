@@ -6,6 +6,7 @@ import com.tyler.YouthEngedi.jwts.JwtTokenProvider;
 import com.tyler.YouthEngedi.models.User;
 import com.tyler.YouthEngedi.models.enums.AuthProvider;
 import com.tyler.YouthEngedi.services.CookieService;
+import com.tyler.YouthEngedi.services.VerificationTokenService;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -32,6 +33,8 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
     private UserRepository userRepository;
     @Autowired
     private CookieService cookieService;
+    @Autowired
+    private VerificationTokenService verificationTokenService;
 
     @Override
     @LogExecutionTime(value = "Calling onAuthenticationSuccess() in OAuth2AuthenticationSuccessHandler class",doSave = false)
@@ -64,6 +67,7 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
 
             // Check if account is disabled safely
             if (!user.isEnabled()) {
+                verificationTokenService.sendVerificationLink(user);
                 handleExceptionRedirect(request, response, "account_disabled");
                 return;
             }

@@ -32,7 +32,6 @@ public class ImageService {
         return ResponseEntity.ok(imageRepository.findAll(PageRequest.of(page,size)));
     }
 
-    @RateLimited(capacity = 5,refillTokens = 5,refillDuration = "15m",key="uploadImage")
     @AuditAction("Uploading images to Object storage using Cloudinary")
     @LogExecutionTime(value="Uploading images to Object storage using Cloudinary")
     public ResponseEntity<?> uploadImage(MultipartFile multipartFile) {
@@ -53,7 +52,6 @@ public class ImageService {
         return ResponseEntity.ok("Image uploaded to database");
     }
 
-    @RateLimited(capacity = 5,refillTokens = 5,refillDuration = "15m",key="uploadChunks")
     @AuditAction("Uploading images to Object storage using Cloudinary in chunks")
     @LogExecutionTime(value="Uploading images to Object storage using Cloudinary in chunks")
     public void uploadChunks(FragmentedImage fragmentedImage) {

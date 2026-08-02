@@ -32,23 +32,19 @@ import java.util.concurrent.CompletableFuture;
 public class EventService {
 
     private final static Logger logger = LogManager.getLogger(EventService.class);
+    private final static String link = "http://localhost:5173/calendar";
+
     @Autowired
     private EventRepository eventRepository;
     @Autowired
     private EmailService emailService;
     @Autowired
     private UserRepository userRepository;
-//    @Autowired
-//    private NotificationService notificationService;
     @Autowired
     private AnnouncementRepository announcementRepository;
 
 
-    private final static String link = "http://localhost:5173/calendar";
-
-    @RateLimited(capacity = 5,refillTokens = 5,refillDuration = "15m",key="createEvent")
     @LogExecutionTime(value="Creating event in EventService class",doSave = false)
-    @Transactional
     public EventResponse createEvent(EventRequest request,long userId){
 
         User user = userRepository.findById(userId).orElseThrow(() -> new ResourceNotFoundException("User not found"));
@@ -187,7 +183,7 @@ public class EventService {
 
         return mapToEventResponse(event);
     }
-    @RateLimited(capacity = 5,refillTokens = 5,refillDuration = "15m",key="getEventsByDate")
+
     @LogExecutionTime(value="Get Events by date in EventService class",doSave = false)
     public List<EventResponse> getEventsByDate(String date) {
 
@@ -196,9 +192,8 @@ public class EventService {
 
         return events.stream().map(this::mapToEventResponse).toList();
     }
-    @RateLimited(capacity = 5,refillTokens = 5,refillDuration = "15m",key="removeEvent")
+
     @LogExecutionTime(value="Deleting event in EventService class",doSave = false)
-    @Transactional
     public String removeEvent(long eventId) {
 
         Event existingEvent = eventRepository.findById(eventId).orElseThrow(() -> new ResourceNotFoundException("Event not found"));
@@ -306,9 +301,7 @@ public class EventService {
 
         return "Event Deleted Successfully";
     }
-    @RateLimited(capacity = 5,refillTokens = 5,refillDuration = "15m",key="updateEvent")
     @LogExecutionTime(value="Deleting event in EventService class",doSave = false)
-    @Transactional
     public EventResponse updateEvent(long eventId,EventRequest request,long userId) {
 
         Event existingEvent = eventRepository.findById(eventId).orElseThrow(() -> new ResourceNotFoundException("Event not found"));

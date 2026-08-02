@@ -10,8 +10,8 @@ FROM eclipse-temurin:22-jdk
 
 WORKDIR /app
 
-COPY --from=build /app/target/youth-engedi-app.jar app.jar
+COPY --from=build /app/target/youth-engedi-app.jar youth-engedi-app.jar
 
 EXPOSE 8080
 
-ENTRYPOINT ["java", "-jar", "app.jar"]
+ENTRYPOINT ["java", "-jar", "youth-engedi-app.jar"]

@@ -65,7 +65,6 @@ public class UserService {
 
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder(12);
 
-    @RateLimited(capacity = 2,refillTokens = 2,refillDuration = "2m",key="register")
     @LogExecutionTime("Register new user")
     public ResponseEntity<?> register(UserRegisterRequest request){
 
@@ -101,7 +100,6 @@ public class UserService {
         return new ResponseEntity<>("Registration successful. Verification email sent. Check your inbox.", HttpStatus.CREATED);
     }
 
-    @RateLimited(capacity = 5,refillTokens = 5,refillDuration = "15m",key="login")
     @LogExecutionTime(value="Login user")
     public ResponseEntity<String> login(UserLoginRequest request) {
 
@@ -128,7 +126,6 @@ public class UserService {
         return ResponseEntity.ok().header(HttpHeaders.SET_COOKIE,cookie).body("Login successfully");
     }
 
-    @RateLimited(capacity = 5,refillTokens = 5,refillDuration = "15m",key="findAll")
     @LogExecutionTime(value = "Fetching all users in UserService class",doSave = false)
     public ResponseEntity<Page<UserResponse>> findAll(int page, int size) {
 
@@ -143,7 +140,6 @@ public class UserService {
         }
     }
 
-    @RateLimited(capacity = 5,refillTokens = 5,refillDuration = "15m",key="findById")
     @LogExecutionTime(value = "Fetching a user by id in UserService class",doSave = false)
     public ResponseEntity<UserResponse> findById(long userId) {
 
@@ -164,7 +160,6 @@ public class UserService {
 //        UserResponse response = userMapper.mapToResponse(dto);
         return ResponseEntity.ok(response);
     }
-    @RateLimited(capacity = 5,refillTokens = 5,refillDuration = "15m",key="updateProfile")
     @LogExecutionTime(value="Updating user profile in UserService class",doSave = false)
     public ResponseEntity<UserProfileResponse> updateProfile(ProfileRequest request,long userId) {
 
@@ -190,12 +185,29 @@ public class UserService {
         }
     }
 
-    @RateLimited(capacity = 5,refillTokens = 5,refillDuration = "15m",key="updateProfile")
     @LogExecutionTime(value="Updating user role in UserService class",doSave = false)
     public void upgradeMemberRole(String email){
         try{
             User existingUser = userRepository.findByEmail(email).orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
+            if(existingUser.getRoles().contains(Role.YOUTH_LEADER) && existingUser.getRoles().size() == 1){
+                Set<Role> roles = new HashSet<>();
+                roles.add(Role.MEMBER);
+                roles.add(Role.YOUTH_LEADER);
+
+                existingUser.setRoles(roles);
+                return;
+            }
+
+            if(existingUser.getRoles().contains(Role.ADMIN) && existingUser.getRoles().size() == 1){
+                Set<Role> roles = new HashSet<>();
+                roles.add(Role.MEMBER);
+                roles.add(Role.YOUTH_LEADER);
+                roles.add(Role.ADMIN);
+
+                existingUser.setRoles(roles);
+                return;
+            }
             if(existingUser.getRoles().contains(Role.ADMIN)){
                 return;
             }
@@ -212,12 +224,18 @@ public class UserService {
         }
     }
 
-    @RateLimited(capacity = 5,refillTokens = 5,refillDuration = "15m",key="updateProfile")
     @LogExecutionTime("Updating user role in UserService class")
     public void downgradeMemberRole(String email){
         try{
             User existingUser = userRepository.findByEmail(email).orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
+            if(existingUser.getRoles().isEmpty()){
+                Set<Role> roles = new HashSet<>();
+
+                roles.add(Role.MEMBER);
+                existingUser.setRoles(roles);
+                return;
+            }
             if(existingUser.getRoles().size() == 1){
                 return;
             }
@@ -234,10 +252,7 @@ public class UserService {
 
 
 
-    @RateLimited(capacity = 5,refillTokens = 5,refillDuration = "15m",key="deleteAccount")
-    @AuditAction("Deleting user from the database with userId")
     @LogExecutionTime("Soft Delete in UserService class")
-    @Transactional
     public ResponseEntity<String> deleteAccount(long userId,String token){
 
         User user = userRepository.findById(userId).orElseThrow(() -> new ResourceNotFoundException("User not found"));
@@ -250,10 +265,7 @@ public class UserService {
         return ResponseEntity.ok("Successfully deactivated your account time remaining from session: " + hours + " hrs remaining");
     }
 
-    @RateLimited(capacity = 5,refillTokens = 5,refillDuration = "15m",key="deactivateMember")
-    @AuditAction("Deactivating user from the database")
     @LogExecutionTime(value = "Soft Delete in UserService class",doSave = false)
-    @Transactional
     public ResponseEntity<?> deactivateMember(String email){
 
         try{
@@ -270,10 +282,7 @@ public class UserService {
         }
     }
 
-    @RateLimited(capacity = 5,refillTokens = 5,refillDuration = "15m",key="activateMember")
-    @AuditAction("activating user from the database")
     @LogExecutionTime(value = "Soft Activate in UserService class",doSave = false)
-    @Transactional
     public ResponseEntity<?> activateMember(String email){
 
         try{
@@ -289,11 +298,12 @@ public class UserService {
         }
     }
 
+    @Transactional
     public void enableMember(User user){
             user.setEnabled(true);
             userRepository.save(user);
     }
-    @RateLimited(capacity = 5,refillTokens = 5,refillDuration = "15m",key="logout")
+
     @LogExecutionTime(value = "Logout User")
     public ResponseEntity<?> logout(HttpServletResponse response,long userId) {
 
@@ -315,7 +325,6 @@ public class UserService {
             return socialLoginService.socialLogin(request);
     }
 
-    @RateLimited(capacity = 5,refillTokens = 5,refillDuration = "15m",key="continueAsGuest")
     @LogExecutionTime(value = "Continue as Guest")
     public ResponseEntity<?> continueAsGuest() {
         String guestId = "guest_" + UUID.randomUUID();
