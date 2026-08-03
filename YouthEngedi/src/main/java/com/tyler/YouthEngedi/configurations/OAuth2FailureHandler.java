@@ -10,6 +10,8 @@ import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 
+import static com.tyler.YouthEngedi.constants.UrlConstants.FRONTEND_LOGIN_PROD;
+
 @Component
 public class OAuth2FailureHandler extends SimpleUrlAuthenticationFailureHandler {
 
@@ -23,7 +25,7 @@ public class OAuth2FailureHandler extends SimpleUrlAuthenticationFailureHandler 
             error = "email_not_verified";
         }
 
-        String link = "http://localhost:5173/login?error=" + error;
+        String link = FRONTEND_LOGIN_PROD + "?error=" + error;
         getRedirectStrategy().sendRedirect(request,response,link);
     }
 }

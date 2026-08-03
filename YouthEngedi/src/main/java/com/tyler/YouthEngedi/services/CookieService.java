@@ -11,10 +11,11 @@ public class CookieService {
     @Value("${app.jwt.expiration-milliseconds}")
     private long maxAge;
 
+    private boolean production = true;
     public Cookie resetToken(){
         Cookie cookie = new Cookie("jwt-token",null);
         cookie.setPath("/");
-        cookie.setSecure(false); // set true in prod
+        cookie.setSecure(production); // set true in prod
         cookie.setMaxAge(0);
 
         return cookie;
@@ -22,7 +23,7 @@ public class CookieService {
 
     public String issueToken(String token){
         return ResponseCookie.from("jwt-token", token)
-                .secure(false) // Set to TRUE in production
+                .secure(production) // Set to TRUE in production
                 .maxAge(maxAge)
                 .path("/")
                 .sameSite("Lax")
@@ -32,7 +33,7 @@ public class CookieService {
 
     public String issueToken(String token,long maxAge){
         return ResponseCookie.from("jwt-token", token)
-                .secure(false) // Set to TRUE in production
+                .secure(production) // Set to TRUE in production
                 .maxAge(maxAge)
                 .path("/")
                 .sameSite("Lax")
