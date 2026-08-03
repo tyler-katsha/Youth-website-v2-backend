@@ -29,6 +29,8 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Set;
 
+import static com.tyler.YouthEngedi.constants.UrlConstants.*;
+
 @Service
 public class EmailService {
 
@@ -137,7 +139,7 @@ public class EmailService {
                 request.getMessage()
         );
 
-        helper.setTo(developerEmail);
+        helper.setTo(request.getEmail());
 
         helper.setFrom(adminEmail);
 
@@ -163,8 +165,8 @@ public class EmailService {
         String subject = "Password Reset Request - Youth Management System";
         String senderEmail = "no-reply@youthmanagementsystem.com";
 
-        String homeUrl = "http://localhost:5173";
-        String resetUrl = "http://localhost:5173/reset-password?token=" + request.getToken();
+        String homeUrl = FRONTEND_URL_PROD;
+        String resetUrl = String.format(FRONTEND_RESET_PASSWORD_PROD, request.getToken());
 
         String htmlTemplate = """
             <!DOCTYPE html>
@@ -410,7 +412,7 @@ public class EmailService {
 
         MimeMessageHelper helper = new MimeMessageHelper(message,true,"UTF-8");
 
-        helper.setTo(adminEmail);
+        helper.setTo(email);
 
         helper.setFrom(adminEmail);
 
@@ -826,7 +828,7 @@ public class EmailService {
     @Async
     public void sendVerificationEmail(String email, String token) throws MessagingException {
 
-        String link = String.format("http://localhost:5173/verify?token=%s&email=%s",token,email);
+        String link = String.format(FRONTEND_VERIFICATION_PROD,token,email);
 
         MimeMessage message = mailSender.createMimeMessage();
 

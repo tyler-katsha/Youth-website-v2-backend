@@ -23,6 +23,8 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
+import static com.tyler.YouthEngedi.constants.UrlConstants.*;
+
 @Component
 public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
 
@@ -100,12 +102,12 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
 
         response.addHeader(HttpHeaders.SET_COOKIE,cookieService.issueToken(token));
 
-        getRedirectStrategy().sendRedirect(request, response, "http://localhost:5173/oauth2/redirect");
+        getRedirectStrategy().sendRedirect(request, response, FRONTEND_OAUTH_PROD);
     }
 
     private void handleExceptionRedirect(HttpServletRequest request, HttpServletResponse response, String errorCode) throws IOException {
         // Redirect back to frontend login with an error query parameter instead of breaking the filter chain
-        String targetUrl = UriComponentsBuilder.fromUriString("http://localhost:5173/login").queryParam("error", errorCode).build().toUriString();
+        String targetUrl = UriComponentsBuilder.fromUriString(FRONTEND_LOGIN_PROD).queryParam("error", errorCode).build().toUriString();
 
         getRedirectStrategy().sendRedirect(request, response, targetUrl);
     }

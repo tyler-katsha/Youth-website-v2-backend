@@ -52,7 +52,6 @@ public class VerificationTokenService {
 
         User user = userRepository.findByEmail(email).orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
-        System.out.println("User: " + user);
         verificationTokenRepository.deleteByUser(user);
 
         VerificationToken verificationToken = VerificationToken
