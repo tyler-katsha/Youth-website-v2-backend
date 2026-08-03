@@ -6,6 +6,7 @@ import com.tyler.YouthEngedi.Repository.VerificationTokenRepository;
 import com.tyler.YouthEngedi.models.User;
 import com.tyler.YouthEngedi.models.VerificationToken;
 import jakarta.mail.MessagingException;
+import jakarta.transaction.Transactional;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,10 +28,11 @@ public class VerificationTokenService {
     @Autowired
     private EmailService emailService;
 
-    @Async
+    @Transactional
     public void sendVerificationLink(User user){
         String token = UUID.randomUUID().toString();
 
+        verificationTokenRepository.deleteByUser(user);
         VerificationToken verificationToken = VerificationToken
                 .builder()
                 .token(token)
@@ -40,33 +42,41 @@ public class VerificationTokenService {
 
         verificationTokenRepository.save(verificationToken);
 
-        CompletableFuture.runAsync(() -> {
-            try{
-                emailService.sendVerificationEmail(user.getEmail(),token);
-            } catch (MessagingException e){
-                logger.error("Failed to send email to {} ",user.getEmail(),e);
-            }
-        });
+        sendTokenEmail(user.getEmail(),token);
     }
 
+    @Transactional
     public void resendVerification(String email){
         String token = UUID.randomUUID().toString();
 
+
         User user = userRepository.findByEmail(email).orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+        System.out.println("User: " + user);
+        verificationTokenRepository.deleteByUser(user);
 
         VerificationToken verificationToken = VerificationToken
                 .builder()
-                .token(token)
-                .user(user)
+                .token(token).user(user)
                 .expiryDate(LocalDateTime.now().plusHours(24))
+                .user(user)
                 .build();
 
         verificationTokenRepository.save(verificationToken);
 
-        try{
-            emailService.sendVerificationEmail(email,token);
-        } catch (MessagingException e){
-            logger.error("Failed to send email to {} ",email,e);
-        }
+        sendTokenEmail(email,token);
+    }
+
+
+    @Async
+    private void sendTokenEmail(String email,String token){
+        CompletableFuture.runAsync(() -> {
+            try{
+                emailService.sendVerificationEmail(email,token);
+            } catch (MessagingException e){
+                logger.error("Failed to send email to {} ",email,e);
+            }
+        });
     }
 }
+

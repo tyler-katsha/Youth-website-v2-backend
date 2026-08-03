@@ -6,12 +6,14 @@ services:
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       MYSQL_DATABASE: ${DB_NAME}
-      MYSQL_USER: ${JDBC_USERNAME}
-      MYSQL_PASSWORD: ${JDBC_PASSWORD}
+    env_file:
+      - .env
     ports:
-      - "3306:3306"
+      - "3307:3306"
     volumes:
       - mysql_data:/var/lib/mysql
+    networks:
+      - youth-network
 
   app:
     build: .
@@ -28,6 +30,12 @@ services:
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
     ports:
       - "8080:8080"
+    networks:
+      - youth-network
 
+
+networks:
+  youth-network:
+    driver: bridge
 volumes:
   mysql_data:

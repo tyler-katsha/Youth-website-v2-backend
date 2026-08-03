@@ -113,6 +113,9 @@ public class AuthenticationController {
         try{
             VerificationToken verificationToken = verificationTokenRepository.findByToken(token);
 
+            if(verificationToken == null){
+                return new ResponseEntity<>("Token is doesn't match",HttpStatus.NOT_ACCEPTABLE);
+            }
             if(verificationToken.getExpiryDate().isBefore(LocalDateTime.now())){
                 return ResponseEntity.badRequest().body("Token expired");
             }

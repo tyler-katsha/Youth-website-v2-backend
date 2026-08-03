@@ -1,5 +1,6 @@
 package com.tyler.YouthEngedi.Repository;
 
+import com.tyler.YouthEngedi.models.User;
 import com.tyler.YouthEngedi.models.VerificationToken;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
@@ -10,4 +11,6 @@ import java.util.UUID;
 public interface VerificationTokenRepository extends JpaRepository<VerificationToken, UUID> {
 
     VerificationToken findByToken(String token);
+    VerificationToken findByUserId(long userId);
+    void deleteByUser(User user);
 }

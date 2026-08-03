@@ -49,11 +49,8 @@ public class User implements UserDetails, Serializable {
     private boolean enabled;
     @CreationTimestamp
     private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
     @Column(nullable = false)
     private boolean isDeleted = false;
-    @Column(nullable = false)
-    private boolean isOnline = false;
 
     @Override
     @NullMarked

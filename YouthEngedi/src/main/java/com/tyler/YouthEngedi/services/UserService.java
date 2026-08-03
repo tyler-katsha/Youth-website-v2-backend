@@ -72,7 +72,7 @@ public class UserService {
 
         if(existingUser.isPresent()){
             if(existingUser.get().isEnabled()){
-                return new ResponseEntity<>("User Already exist and Verified", HttpStatus.FOUND);
+                return new ResponseEntity<>("User already exist and is verified", HttpStatus.FOUND);
             } else{
                 verificationTokenService.sendVerificationLink(existingUser.get());
 
@@ -95,6 +95,7 @@ public class UserService {
             }
         }
 
+        verificationTokenService.sendVerificationLink(user);
         userRepository.save(user);
 
         return new ResponseEntity<>("Registration successful. Verification email sent. Check your inbox.", HttpStatus.CREATED);
@@ -116,10 +117,6 @@ public class UserService {
         String token = tokenProvider.generateToken(user);
 
         String cookie = cookieService.issueToken(token);
-
-        CompletableFuture.runAsync(() -> {
-            updateUserOnlineStatus(user.getId(),true);
-        });
 
         // activeUserService.incrementActiveUserCount();
 
@@ -173,8 +170,6 @@ public class UserService {
                 user.setProfileImageUrl(url);
             }
 
-            user.setUpdatedAt(LocalDateTime.now());
-
             User saved = userRepository.save(user);
 
             // userCacheService.evict(user.getEmail());
@@ -218,7 +213,6 @@ public class UserService {
             roles.add(nextRole);
             existingUser.setRoles(roles);
 
-            existingUser.setUpdatedAt(LocalDateTime.now());
         } catch (Exception e){
             e.printStackTrace();
         }
@@ -244,7 +238,6 @@ public class UserService {
 
             existingUser.setRoles(roles);
 
-            existingUser.setUpdatedAt(LocalDateTime.now());
         } catch (Exception e){
             e.printStackTrace();
         }
@@ -310,10 +303,6 @@ public class UserService {
         Cookie cookie = cookieService.resetToken();
 
         response.addCookie(cookie);
-
-        CompletableFuture.runAsync(() -> {
-            updateUserOnlineStatus(userId,false);
-        });
 
         // activeUserService.decrementActiveUserCount();
 
@@ -441,8 +430,4 @@ public class UserService {
         userRepository.save(existingUser);
     }
 
-    @Transactional
-    public void updateUserOnlineStatus(long userId,boolean isOnline){
-        userRepository.updateOnlineStatus(userId,isOnline);
-    }
 }

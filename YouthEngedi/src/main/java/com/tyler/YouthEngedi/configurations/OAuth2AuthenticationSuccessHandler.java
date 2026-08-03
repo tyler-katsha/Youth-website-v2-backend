@@ -67,7 +67,7 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
 
             // Check if account is disabled safely
             if (!user.isEnabled()) {
-                verificationTokenService.sendVerificationLink(user);
+                verificationTokenService.resendVerification(email);
                 handleExceptionRedirect(request, response, "account_disabled");
                 return;
             }

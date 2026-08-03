@@ -11,8 +11,4 @@ public interface UserRepository extends JpaRepository<User,Long> {
 
     Optional<User> findByEmail(String email);
 
-
-    @Query("UPDATE User u SET u.isOnline = :isOnline WHERE u.id = :userId")
-    void updateOnlineStatus(long userId,boolean isOnline);
-
 }

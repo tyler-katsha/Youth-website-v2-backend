@@ -31,6 +31,8 @@ public class SecurityConfiguration {
 
     @Autowired
     private OAuth2AuthenticationSuccessHandler successHandler;
+    @Autowired
+    private OAuth2FailureHandler failureHandler;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -41,11 +43,11 @@ public class SecurityConfiguration {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS).sessionFixation().none())
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers("/api/v1/auth/**","/oauth2/**","/","/error","/api/v1/email/send-email")
+                        .requestMatchers("/api/v1/auth/**","/oauth2/**","/","/error","/api/v1/email/**")
                         .permitAll()
                         .anyRequest()
                         .authenticated())
-                .oauth2Login(oauth -> oauth.successHandler(successHandler))
+                .oauth2Login(oauth -> oauth.successHandler(successHandler).failureHandler(failureHandler))
                 .logout(logout -> logout
                         .logoutUrl("/api/v1/auth/logout")
                         .logoutSuccessHandler(((request, response, authentication) -> response.setStatus(HttpServletResponse.SC_ACCEPTED)))

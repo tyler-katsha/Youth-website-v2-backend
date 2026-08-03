@@ -43,7 +43,6 @@ public class EmailService {
     @Value("${spring.mail.youth.email}")
     private String adminEmail;
 
-    @LogExecutionTime(value="Sent email to developer in EmailService class",doSave = false)
     public void sendEmail(EmailRequest request) throws MessagingException {
         MimeMessage message = mailSender.createMimeMessage();
 
@@ -156,21 +155,17 @@ public class EmailService {
         mailSender.send(message);
     }
 
-    @LogExecutionTime(value="Sent email to developer in EmailService class", doSave = false)
     @Async
     public void sendEmail(PasswordResetRequest request) throws MessagingException {
         MimeMessage mimeMessage = mailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
 
-        // 1. Hardcoded Subject and Sender
         String subject = "Password Reset Request - Youth Management System";
         String senderEmail = "no-reply@youthmanagementsystem.com";
 
-        // 2. Dynamic Links
         String homeUrl = "http://localhost:5173";
         String resetUrl = "http://localhost:5173/reset-password?token=" + request.getToken();
 
-        // 3. Updated HTML Template with Youth Management System branding
         String htmlTemplate = """
             <!DOCTYPE html>
             <html lang="en">
@@ -384,8 +379,7 @@ public class EmailService {
             </html>
             """;
 
-        String finalHtmlBody = htmlTemplate.replace("{{home_url}}", homeUrl)
-                .replace("{{reset_url}}", resetUrl);
+        String finalHtmlBody = htmlTemplate.replace("{{home_url}}", homeUrl).replace("{{reset_url}}", resetUrl);
 
         helper.setTo(request.getEmail());
         helper.setFrom(senderEmail);
@@ -394,7 +388,7 @@ public class EmailService {
 
         mailSender.send(mimeMessage);
     }
-    @LogExecutionTime(value="Sent email to developer in EmailService class",doSave = false)
+
     public void sendEmail(String emailBody,String subject) throws MessagingException {
         MimeMessage message = mailSender.createMimeMessage();
 
@@ -411,7 +405,6 @@ public class EmailService {
         mailSender.send(message);
     }
 
-    @LogExecutionTime(value="Sent email to developer in EmailService class",doSave = false)
     public void sendEmail(String email,String subject, String msg) throws MessagingException {
         MimeMessage message = mailSender.createMimeMessage();
 
@@ -434,7 +427,6 @@ public class EmailService {
         mailSender.send(message);
     }
 
-    @LogExecutionTime(value="Sent email to developer in EmailService class",doSave = false)
     public void sendEmail(String aEmail, String email,String subject, String msg) throws MessagingException {
         MimeMessage message = mailSender.createMimeMessage();
 
@@ -479,7 +471,7 @@ public class EmailService {
 
                         <tr>
                             <td style="background:#16a34a;padding:25px;text-align:center;color:#ffffff;">
-                                <h1 style="margin:0;">🎉 Role Request Approved</h1>
+                                <h1 style="margin:0;">Role Request Approved</h1>
                             </td>
                         </tr>
 
@@ -834,7 +826,7 @@ public class EmailService {
     @Async
     public void sendVerificationEmail(String email, String token) throws MessagingException {
 
-        String link = "http://localhost:5173/api/auth/verify?token=" + token;
+        String link = String.format("http://localhost:5173/verify?token=%s&email=%s",token,email);
 
         MimeMessage message = mailSender.createMimeMessage();
 
@@ -884,6 +876,7 @@ public class EmailService {
                                         Verify My Account
                                     </a>
                                 </p>
+                                <br/>
 
                                 <p>
                                     If the button above doesn't work, copy and paste the following link into your browser:
@@ -935,8 +928,8 @@ public class EmailService {
     public void sendTestEmail(String type) throws MessagingException {
 
         String testToken = "token123";
-        User admin = User.builder().id(-999L).name("Admin").email(adminEmail).authProvider(AuthProvider.LOCAL).roles(Set.of(Role.MEMBER,Role.YOUTH_LEADER,Role.ADMIN)).enabled(true).createdAt(LocalDateTime.MAX).updatedAt(LocalDateTime.MIN).build();
-        User u = User.builder().id(-999L).name("Bob").email(adminEmail).authProvider(AuthProvider.OAUTH2).roles(Set.of(Role.MEMBER)).enabled(true).createdAt(LocalDateTime.MAX).updatedAt(LocalDateTime.MIN).build();
+        User admin = User.builder().id(-999L).name("Admin").email(adminEmail).authProvider(AuthProvider.LOCAL).roles(Set.of(Role.MEMBER,Role.YOUTH_LEADER,Role.ADMIN)).enabled(true).createdAt(LocalDateTime.MAX).build();
+        User u = User.builder().id(-999L).name("Bob").email(adminEmail).authProvider(AuthProvider.OAUTH2).roles(Set.of(Role.MEMBER)).enabled(true).createdAt(LocalDateTime.MAX).build();
         RoleRequest request = RoleRequest.builder().roleReqId(-999L).requestedRole(Role.ADMIN).requestStatus(RequestStatus.PENDING).requestedAt(LocalDateTime.MAX).reviewAt(LocalDateTime.MIN).adminComment("Hello,\n\nThis is a test message generated by the Youth Engedi Management System to verify email formatting, styling, and delivery.\n\nNo action is required. If you received this email, the email service is functioning correctly.\n\nKind regards,\nYouth Engedi Management System").userReason("Hello,\n\nThis is a test message generated by the Youth Engedi Management System to verify email formatting, styling, and delivery.\n\nNo action is required. If you received this email, the email service is functioning correctly.\n\nKind regards,\nYouth Engedi Management System").wasReviewed(false).user(null).reviewedBy(null).build();
         Event event = Event.builder().eventId(-999L).title("Title 001").startTime("00:00").endTime("23:59").description("Hello,\n\nThis is a test message generated by the Youth Engedi Management System to verify email formatting, styling, and delivery.\n\nNo action is required. If you received this email, the email service is functioning correctly.\n\nKind regards,\nYouth Engedi Management System").eventType(EventType.GENERAL).createdByUserId(-99919L).eventDate(LocalDate.EPOCH).build();
 
@@ -1041,7 +1034,6 @@ public class EmailService {
         try{
             sendEmail(user.getEmail(),subject,body);
         } catch (MessagingException e){
-            // change null to user before going to production
             logger.error("Failed to send email to {} with subject {}",user.getEmail(),subject,e);
         }
         sendAdminRequest(request);
