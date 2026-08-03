@@ -4,21 +4,16 @@ import com.tyler.YouthEngedi.Exceptions.ResourceNotFoundException;
 import com.tyler.YouthEngedi.Repository.ImageRepository;
 import com.tyler.YouthEngedi.annotations.AuditAction;
 import com.tyler.YouthEngedi.annotations.LogExecutionTime;
-import com.tyler.YouthEngedi.annotations.RateLimited;
 import com.tyler.YouthEngedi.models.Image;
 import com.tyler.YouthEngedi.models.dtos.FragmentedImage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Service
 public class ImageService {

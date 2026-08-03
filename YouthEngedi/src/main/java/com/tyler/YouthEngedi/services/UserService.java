@@ -5,9 +5,7 @@ import com.tyler.YouthEngedi.Exceptions.LockedAccountException;
 import com.tyler.YouthEngedi.Exceptions.PasswordResetException;
 import com.tyler.YouthEngedi.Exceptions.ResourceNotFoundException;
 import com.tyler.YouthEngedi.Repository.UserRepository;
-import com.tyler.YouthEngedi.annotations.AuditAction;
 import com.tyler.YouthEngedi.annotations.LogExecutionTime;
-import com.tyler.YouthEngedi.annotations.RateLimited;
 import com.tyler.YouthEngedi.jwts.JwtTokenProvider;
 import com.tyler.YouthEngedi.models.User;
 import com.tyler.YouthEngedi.models.dtos.*;
@@ -24,15 +22,12 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
 
 @Service
 public class UserService {

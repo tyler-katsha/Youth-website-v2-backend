@@ -1,7 +1,6 @@
 package com.tyler.YouthEngedi.controllers;
 
 import com.tyler.YouthEngedi.Exceptions.ResourceNotFoundException;
-import com.tyler.YouthEngedi.annotations.RateLimited;
 import com.tyler.YouthEngedi.models.UserPrincipal;
 import com.tyler.YouthEngedi.models.dtos.ApiResponse;
 import com.tyler.YouthEngedi.models.dtos.ProfileRequest;
@@ -25,7 +24,6 @@ public class UserController {
     private UserService userService;
 
     @PreAuthorize("hasAnyRole('ADMIN','YOUTH_LEADER')")
-    @RateLimited(capacity = 5,refillTokens = 5,refillDuration = "15m",key="findAll")
     @GetMapping("/users")
     public ResponseEntity<Page<UserResponse>> findAll(@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "100") int size){
         try{
@@ -39,7 +37,6 @@ public class UserController {
 
 
     @PreAuthorize("hasAnyRole('ADMIN','MEMBER','YOUTH_LEADER')")
-    @RateLimited(capacity = 5,refillTokens = 5,refillDuration = "15m",key="findUserProfile")
     @GetMapping("/users/me")
     public ResponseEntity<?> findUserProfile(@AuthenticationPrincipal UserPrincipal principal){
         try{
@@ -52,7 +49,6 @@ public class UserController {
     }
 
     @PreAuthorize("hasAnyRole('ADMIN','YOUTH_LEADER','MEMBER')")
-    @RateLimited(capacity = 5,refillTokens = 5,refillDuration = "15m",key="updateProfile")
     @PutMapping(value = "/users/update-me",consumes= MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> updateProfile(@ModelAttribute ProfileRequest request, @AuthenticationPrincipal UserPrincipal principal){
         try{
@@ -63,8 +59,7 @@ public class UserController {
             return new ResponseEntity<>(new ApiResponse(false,"Something went wrong. Please try again later."),HttpStatus.BAD_REQUEST);
         }
     }
-    @PreAuthorize("hasAnyRole('ADMIN','YOUTH_LEADER')")
-    @RateLimited(capacity = 5,refillTokens = 5,refillDuration = "15m",key="upgradeMemberRole")
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/users/role/{email}/upgrade")
     public ResponseEntity<?> upgradeMemberRole(@PathVariable String email){
         try{
@@ -76,8 +71,7 @@ public class UserController {
             return new ResponseEntity<>(new ApiResponse(false,"Something went wrong. Please try again later."),HttpStatus.BAD_REQUEST);
         }
     }
-    @PreAuthorize("hasAnyRole('ADMIN','YOUTH_LEADER')")
-    @RateLimited(capacity = 5,refillTokens = 5,refillDuration = "15m",key="downgradeMemberRole")
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/users/role/{email}/downgrade")
     public ResponseEntity<?> downgradeMemberRole(@PathVariable String email){
         try{
@@ -92,7 +86,6 @@ public class UserController {
 
 
     @PreAuthorize("hasAnyRole('ADMIN','MEMBER','YOUTH_LEADER')")
-    @RateLimited(capacity = 5,refillTokens = 5,refillDuration = "15m",key="deleteAccount")
     @DeleteMapping("/users")
     public ResponseEntity<?> deleteAccount(@AuthenticationPrincipal UserPrincipal principal,@CookieValue(name="jwt-token") String token){
         try{
@@ -109,8 +102,7 @@ public class UserController {
         }
     }
 
-    @PreAuthorize("hasAnyRole('ADMIN','YOUTH_LEADER')")
-    @RateLimited(capacity = 5,refillTokens = 5,refillDuration = "15m",key="deactivateMember")
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/users/{email}/deactivate")
     public ResponseEntity<?> deactivateMember(@PathVariable String email){
         try{
@@ -122,8 +114,7 @@ public class UserController {
         }
     }
 
-    @PreAuthorize("hasAnyRole('ADMIN','YOUTH_LEADER')")
-    @RateLimited(capacity = 5,refillTokens = 5,refillDuration = "15m",key="activateMember")
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/users/{email}/activate")
     public ResponseEntity<?> activateMember(@PathVariable String email){
         try{

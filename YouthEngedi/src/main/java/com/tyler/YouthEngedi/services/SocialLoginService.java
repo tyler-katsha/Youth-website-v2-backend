@@ -3,7 +3,6 @@ package com.tyler.YouthEngedi.services;
 import com.tyler.YouthEngedi.Exceptions.VerificationException;
 import com.tyler.YouthEngedi.Repository.UserRepository;
 import com.tyler.YouthEngedi.annotations.LogExecutionTime;
-import com.tyler.YouthEngedi.annotations.RateLimited;
 import com.tyler.YouthEngedi.jwts.JwtTokenProvider;
 import com.tyler.YouthEngedi.models.User;
 import com.tyler.YouthEngedi.models.dtos.SocialLoginRequest;
