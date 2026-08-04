@@ -6,6 +6,7 @@ import com.tyler.YouthEngedi.annotations.LogExecutionTime;
 import com.tyler.YouthEngedi.jwts.JwtTokenProvider;
 import com.tyler.YouthEngedi.models.User;
 import com.tyler.YouthEngedi.models.dtos.SocialLoginRequest;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
@@ -16,15 +17,13 @@ import java.util.Map;
 import java.util.Objects;
 
 @Service
+@RequiredArgsConstructor
 public class SocialLoginService {
 
     private final RestTemplate restTemplate = new RestTemplate();
-    @Autowired
-    private JwtTokenProvider tokenProvider;
-    @Autowired
-    private UserRepository userRepository;
-    @Autowired
-    private CookieService cookieService;
+    private final JwtTokenProvider tokenProvider;
+    private final UserRepository userRepository;
+    private final CookieService cookieService;
 
     @LogExecutionTime(value="Login with OAuth2.0 authentication",doSave = false)
     public ResponseEntity<?> socialLogin(SocialLoginRequest request){

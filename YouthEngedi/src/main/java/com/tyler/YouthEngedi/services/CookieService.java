@@ -1,6 +1,7 @@
 package com.tyler.YouthEngedi.services;
 
 import jakarta.servlet.http.Cookie;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseCookie;
 import org.springframework.stereotype.Service;
@@ -11,7 +12,8 @@ public class CookieService {
     @Value("${app.jwt.expiration-milliseconds}")
     private long maxAge;
 
-    private boolean production = true;
+    @Value("${app.production}")
+    public static boolean production;
     public Cookie resetToken(){
         Cookie cookie = new Cookie("jwt-token",null);
         cookie.setPath("/");
@@ -23,20 +25,22 @@ public class CookieService {
 
     public String issueToken(String token){
         return ResponseCookie.from("jwt-token", token)
+                .httpOnly(true)
                 .secure(production) // Set to TRUE in production
                 .maxAge(maxAge)
                 .path("/")
-                .sameSite("Lax")
+                .sameSite(production ? "None" : "Lax")
                 .build()
                 .toString();
     }
 
     public String issueToken(String token,long maxAge){
         return ResponseCookie.from("jwt-token", token)
+                .httpOnly(true)
                 .secure(production) // Set to TRUE in production
                 .maxAge(maxAge)
                 .path("/")
-                .sameSite("Lax")
+                .sameSite(production ? "None" : "Lax")
                 .build()
                 .toString();
     }

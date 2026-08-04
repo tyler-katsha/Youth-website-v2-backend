@@ -5,6 +5,7 @@ import com.tyler.YouthEngedi.Exceptions.ResourceNotFoundException;
 import com.tyler.YouthEngedi.models.dtos.ApiResponse;
 import com.tyler.YouthEngedi.models.dtos.FragmentedImage;
 import com.tyler.YouthEngedi.services.ImageService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -15,10 +16,10 @@ import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/api/v1")
+@RequiredArgsConstructor
 public class ImageController {
 
-    @Autowired
-    private ImageService imageService;
+    private final ImageService imageService;
 
     @PreAuthorize("hasAnyRole('ADMIN','MEMBER','YOUTH_LEADER')")
     @GetMapping("/images")

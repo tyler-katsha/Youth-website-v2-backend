@@ -8,6 +8,7 @@ import com.tyler.YouthEngedi.Repository.UserRepository;
 import com.tyler.YouthEngedi.models.User;
 import com.tyler.YouthEngedi.models.dtos.FragmentedImage;
 import com.tyler.YouthEngedi.models.dtos.InnerFragmentedImage;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -26,13 +27,12 @@ import java.util.Map;
 import java.util.Optional;
 
 @Service
+@RequiredArgsConstructor
 public class CloudinaryService {
 
-    @Autowired
-    private Cloudinary cloudinary;
+    private final Cloudinary cloudinary;
 
-    @Autowired
-    private UserRepository userRepository;
+    private final UserRepository userRepository;
 
     private static final String TEMP_DIR = "temp/uploads/";
     public String upload(MultipartFile file){

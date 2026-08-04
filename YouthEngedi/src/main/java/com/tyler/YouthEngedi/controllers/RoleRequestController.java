@@ -5,6 +5,7 @@ import com.tyler.YouthEngedi.models.UserPrincipal;
 import com.tyler.YouthEngedi.models.dtos.ApiResponse;
 import com.tyler.YouthEngedi.models.dtos.RoleChangeRequest;
 import com.tyler.YouthEngedi.services.RoleRequestService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -14,10 +15,10 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/v1")
+@RequiredArgsConstructor
 public class RoleRequestController {
 
-    @Autowired
-    private RoleRequestService roleRequestService;
+    private final RoleRequestService roleRequestService;
 
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/requests")

@@ -4,6 +4,7 @@ import com.tyler.YouthEngedi.Exceptions.ResourceNotFoundException;
 import com.tyler.YouthEngedi.models.dtos.AnnouncementDto;
 import com.tyler.YouthEngedi.models.dtos.ApiResponse;
 import com.tyler.YouthEngedi.services.AnnouncementService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -12,10 +13,10 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/v1")
+@RequiredArgsConstructor
 public class AnnouncementController {
 
-    @Autowired
-    private AnnouncementService announcementService;
+    private final AnnouncementService announcementService;
 
     @GetMapping("/announcements")
     @PreAuthorize("hasAnyRole('ADMIN','YOUTH_LEADER','MEMBER')")

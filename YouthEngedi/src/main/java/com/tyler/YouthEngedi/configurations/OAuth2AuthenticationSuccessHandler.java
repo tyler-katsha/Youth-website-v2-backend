@@ -24,6 +24,7 @@ import java.time.LocalDateTime;
 import java.util.Optional;
 
 import static com.tyler.YouthEngedi.constants.UrlConstants.*;
+import static com.tyler.YouthEngedi.services.CookieService.production;
 
 @Component
 public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
@@ -69,7 +70,7 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
 
             // Check if account is disabled safely
             if (!user.isEnabled()) {
-                verificationTokenService.resendVerification(email);
+                verificationTokenService.sendVerificationLink(user);
                 handleExceptionRedirect(request, response, "account_disabled");
                 return;
             }
@@ -102,12 +103,12 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
 
         response.addHeader(HttpHeaders.SET_COOKIE,cookieService.issueToken(token));
 
-        getRedirectStrategy().sendRedirect(request, response, FRONTEND_OAUTH_PROD);
+        getRedirectStrategy().sendRedirect(request, response, production ? FRONTEND_OAUTH_PROD : FRONTEND_OAUTH_DEV);
     }
 
     private void handleExceptionRedirect(HttpServletRequest request, HttpServletResponse response, String errorCode) throws IOException {
         // Redirect back to frontend login with an error query parameter instead of breaking the filter chain
-        String targetUrl = UriComponentsBuilder.fromUriString(FRONTEND_LOGIN_PROD).queryParam("error", errorCode).build().toUriString();
+        String targetUrl = UriComponentsBuilder.fromUriString(production ? FRONTEND_LOGIN_PROD : FRONTEND_LOGIN_DEV).queryParam("error", errorCode).build().toUriString();
 
         getRedirectStrategy().sendRedirect(request, response, targetUrl);
     }

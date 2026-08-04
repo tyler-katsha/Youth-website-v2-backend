@@ -5,6 +5,7 @@ import com.tyler.YouthEngedi.models.AuditLog;
 import com.tyler.YouthEngedi.models.Performance;
 import com.tyler.YouthEngedi.models.dtos.ApiResponse;
 import com.tyler.YouthEngedi.services.AdminService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
@@ -13,11 +14,11 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
+@RequiredArgsConstructor
 @RequestMapping("/api/v1/admin")
 public class AdminController {
 
-    @Autowired
-    private AdminService adminService;
+    private final AdminService adminService;
 
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/logs")

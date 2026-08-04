@@ -11,6 +11,7 @@ import com.tyler.YouthEngedi.models.enums.RequestStatus;
 import com.tyler.YouthEngedi.models.enums.Role;
 import com.tyler.YouthEngedi.models.mappers.RoleRequestMapper;
 import jakarta.mail.MessagingException;
+import lombok.RequiredArgsConstructor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,18 +24,14 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 
 @Service
+@RequiredArgsConstructor
 public class RoleRequestService {
     private final static Logger logger = LogManager.getLogger(RoleRequestService.class);
-    @Autowired
-    private RoleRequestRepository repository;
-    @Autowired
-    private EmailService emailService;
-    @Autowired
-    private UserRepository userRepository;
-    @Autowired
-    private UserService userService;
-    @Autowired
-    private RoleRequestMapper roleRequestMapper;
+    private final RoleRequestRepository repository;
+    private final EmailService emailService;
+    private final UserRepository userRepository;
+    private final UserService userService;
+    private final RoleRequestMapper roleRequestMapper;
 
     @LogExecutionTime(value="Fetch all roleRequests in RoleRequestService class",doSave = false)
     public ResponseEntity<Page<RoleChangeRequest>> findAllRoleRequests(int page, int size) {

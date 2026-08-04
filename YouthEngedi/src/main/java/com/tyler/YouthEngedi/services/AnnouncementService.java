@@ -9,6 +9,7 @@ import com.tyler.YouthEngedi.models.dtos.AnnouncementDto;
 import com.tyler.YouthEngedi.models.dtos.EventResponse;
 import com.tyler.YouthEngedi.models.enums.AnnouncementType;
 import com.tyler.YouthEngedi.utils.TimeUtils;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -21,12 +22,10 @@ import java.time.LocalTime;
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class AnnouncementService {
-    @Autowired
-    private AnnouncementRepository announcementRepository;
-
-    @Autowired
-    private EventRepository eventRepository;
+    private final AnnouncementRepository announcementRepository;
+    private final EventRepository eventRepository;
 
     public Page<AnnouncementDto> findAll(int page,int size){
         Page<Announcement> announcements = announcementRepository.findActiveAnnouncements(PageRequest.of(page,size, Sort.by(Sort.Direction.DESC,"createdAt")));

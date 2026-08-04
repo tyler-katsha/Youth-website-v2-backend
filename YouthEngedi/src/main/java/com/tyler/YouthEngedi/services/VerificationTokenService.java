@@ -7,6 +7,7 @@ import com.tyler.YouthEngedi.models.User;
 import com.tyler.YouthEngedi.models.VerificationToken;
 import jakarta.mail.MessagingException;
 import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,21 +19,25 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 @Service
+@RequiredArgsConstructor
 public class VerificationTokenService {
     private final static Logger logger = LogManager.getLogger(VerificationTokenService.class);
 
-    @Autowired
-    private VerificationTokenRepository verificationTokenRepository;
-    @Autowired
-    private UserRepository userRepository;
-    @Autowired
-    private EmailService emailService;
+    private final VerificationTokenRepository verificationTokenRepository;
+    private final UserRepository userRepository;
+    private final EmailService emailService;
 
     @Transactional
     public void sendVerificationLink(User user){
+
+        if (user.getEmail() == null || user.getEmail().isBlank()) {
+            throw new IllegalArgumentException("Email cannot be empty");
+        }
+
         String token = UUID.randomUUID().toString();
 
         verificationTokenRepository.deleteByUser(user);
+
         VerificationToken verificationToken = VerificationToken
                 .builder()
                 .token(token)
@@ -46,17 +51,21 @@ public class VerificationTokenService {
     }
 
     @Transactional
-    public void resendVerification(String email){
-        String token = UUID.randomUUID().toString();
+    public void resendVerification(final String email){
 
+        if (email == null || email.isBlank()) {
+            throw new IllegalArgumentException("Email cannot be empty");
+        }
+        final String token = UUID.randomUUID().toString();
 
-        User user = userRepository.findByEmail(email).orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        final User user = userRepository.findByEmail(email).orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         verificationTokenRepository.deleteByUser(user);
 
-        VerificationToken verificationToken = VerificationToken
+        final VerificationToken verificationToken = VerificationToken
                 .builder()
-                .token(token).user(user)
+                .token(token)
+                .user(user)
                 .expiryDate(LocalDateTime.now().plusHours(24))
                 .user(user)
                 .build();
@@ -68,7 +77,7 @@ public class VerificationTokenService {
 
 
     @Async
-    private void sendTokenEmail(String email,String token){
+    public void sendTokenEmail(final String email,final String token){
         CompletableFuture.runAsync(() -> {
             try{
                 emailService.sendVerificationEmail(email,token);

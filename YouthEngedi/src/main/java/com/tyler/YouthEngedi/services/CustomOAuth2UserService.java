@@ -4,6 +4,7 @@ import com.tyler.YouthEngedi.Repository.UserRepository;
 import com.tyler.YouthEngedi.models.User;
 import com.tyler.YouthEngedi.models.enums.AuthProvider;
 import com.tyler.YouthEngedi.models.enums.Role;
+import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.NullMarked;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -19,10 +20,10 @@ import java.util.Set;
 
 
 @Service
+@RequiredArgsConstructor
 public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
-    @Autowired
-    private UserRepository userRepository;
+    private final UserRepository userRepository;
 
     @Override
     @NullMarked

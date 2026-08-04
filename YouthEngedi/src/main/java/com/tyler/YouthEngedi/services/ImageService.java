@@ -6,6 +6,7 @@ import com.tyler.YouthEngedi.annotations.AuditAction;
 import com.tyler.YouthEngedi.annotations.LogExecutionTime;
 import com.tyler.YouthEngedi.models.Image;
 import com.tyler.YouthEngedi.models.dtos.FragmentedImage;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -16,12 +17,11 @@ import org.springframework.web.multipart.MultipartFile;
 import java.time.LocalDateTime;
 
 @Service
+@RequiredArgsConstructor
 public class ImageService {
 
-    @Autowired
-    private ImageRepository imageRepository;
-    @Autowired
-    private CloudinaryService cloudinaryService;
+    private final ImageRepository imageRepository;
+    private final CloudinaryService cloudinaryService;
 
     public ResponseEntity<Page<Image>> findAll(int page,int size){
         return ResponseEntity.ok(imageRepository.findAll(PageRequest.of(page,size)));

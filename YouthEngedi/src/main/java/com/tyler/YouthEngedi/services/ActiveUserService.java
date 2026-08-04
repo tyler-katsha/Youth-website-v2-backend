@@ -2,6 +2,7 @@ package com.tyler.YouthEngedi.services;
 
 import com.tyler.YouthEngedi.Repository.ActiveUserRepository;
 import com.tyler.YouthEngedi.models.ActiveUser;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
@@ -9,12 +10,11 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 
 @Service
+@RequiredArgsConstructor
 public class ActiveUserService {
 
-    @Autowired
-    private RedisTemplate<String, Object> redisTemplate;
-    @Autowired
-    private ActiveUserRepository activeUserRepository;
+    private final RedisTemplate<String, Object> redisTemplate;
+    private final ActiveUserRepository activeUserRepository;
 
     public static final String ACTIVE_USERS_KEY = "active:users:";
 

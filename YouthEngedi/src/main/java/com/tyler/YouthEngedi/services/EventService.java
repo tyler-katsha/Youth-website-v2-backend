@@ -15,6 +15,7 @@ import com.tyler.YouthEngedi.models.enums.AnnouncementType;
 import com.tyler.YouthEngedi.models.enums.EventType;
 import com.tyler.YouthEngedi.utils.TimeUtils;
 import jakarta.mail.MessagingException;
+import lombok.RequiredArgsConstructor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,20 +26,18 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
+import static com.tyler.YouthEngedi.constants.UrlConstants.FRONTEND_CALENDER_PROD;
+
 @Service
+@RequiredArgsConstructor
 public class EventService {
 
     private final static Logger logger = LogManager.getLogger(EventService.class);
-    private final static String link = "http://localhost:5173/calendar";
 
-    @Autowired
-    private EventRepository eventRepository;
-    @Autowired
-    private EmailService emailService;
-    @Autowired
-    private UserRepository userRepository;
-    @Autowired
-    private AnnouncementRepository announcementRepository;
+    private final EventRepository eventRepository;
+    private final EmailService emailService;
+    private final UserRepository userRepository;
+    private final AnnouncementRepository announcementRepository;
 
 
     @LogExecutionTime(value="Creating event in EventService class",doSave = false)
@@ -152,7 +151,7 @@ public class EventService {
                 event.getEventDate(),
                 event.getStartTime(),
                 event.getEndTime(),
-                link
+                FRONTEND_CALENDER_PROD
         );
 
         String subject = String.format("Event Added: %s", event.getTitle());

@@ -1,6 +1,7 @@
 package com.tyler.YouthEngedi.services;
 
 import com.tyler.YouthEngedi.models.dtos.UserCache;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -9,10 +10,10 @@ import org.springframework.stereotype.Service;
 import java.time.Duration;
 
 @Service
+@RequiredArgsConstructor
 public class UserCacheService {
 
-    @Autowired
-    private RedisTemplate<String, Object> redisTemplate;
+    private final RedisTemplate<String, Object> redisTemplate;
 
     @Value("${app.redis.expiration-minutes}")
     private int redisTTL;

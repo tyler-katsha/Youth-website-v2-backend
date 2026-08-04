@@ -12,6 +12,7 @@ import com.tyler.YouthEngedi.services.EventService;
 import com.tyler.YouthEngedi.services.VerificationTokenService;
 import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.mail.MessagingException;
+import lombok.RequiredArgsConstructor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,15 +28,13 @@ import java.util.concurrent.CompletableFuture;
 
 @RestController
 @RequestMapping("/api/v1/email")
+@RequiredArgsConstructor
 public class EmailController {
     private final static Logger logger = LogManager.getLogger(EmailController.class);
 
-    @Autowired
-    private EmailService emailService;
-    @Autowired
-    private VerificationTokenService verificationTokenService;
-    @Autowired
-    private JwtTokenProvider jwtTokenProvider;
+    private final EmailService emailService;
+    private final VerificationTokenService verificationTokenService;
+    private final JwtTokenProvider jwtTokenProvider;
 
     @PostMapping("/send-email")
     public ResponseEntity<?> sendEmail(@RequestBody EmailRequest request){

@@ -12,6 +12,8 @@ import com.tyler.YouthEngedi.models.enums.RequestStatus;
 import com.tyler.YouthEngedi.models.enums.Role;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,13 +34,12 @@ import java.util.Set;
 import static com.tyler.YouthEngedi.constants.UrlConstants.*;
 
 @Service
+@RequiredArgsConstructor
 public class EmailService {
 
     private static final Logger logger = LogManager.getLogger(EmailService.class);
-    @Autowired
-    private ContactSubmissionRepository contactSubmissionRepository;
-    @Autowired
-    private JavaMailSender mailSender;
+    private final ContactSubmissionRepository contactSubmissionRepository;
+    private final JavaMailSender mailSender;
 
     @Value("${spring.mail.username}")
     private String developerEmail;

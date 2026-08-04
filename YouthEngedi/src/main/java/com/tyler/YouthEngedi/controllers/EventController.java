@@ -7,6 +7,7 @@ import com.tyler.YouthEngedi.models.dtos.ApiResponse;
 import com.tyler.YouthEngedi.models.dtos.EventRequest;
 import com.tyler.YouthEngedi.models.dtos.EventResponse;
 import com.tyler.YouthEngedi.services.EventService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,10 +20,10 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/event")
+@RequiredArgsConstructor
 public class EventController {
 
-    @Autowired
-    private EventService eventService;
+    private final EventService eventService;
 
     @PreAuthorize("hasAnyRole('ADMIN','YOUTH_LEADER')")
     @PostMapping("/addEvent")

@@ -15,6 +15,7 @@ import com.tyler.YouthEngedi.models.mappers.UserMapper;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
@@ -30,30 +31,21 @@ import org.springframework.stereotype.Service;
 import java.util.*;
 
 @Service
+@RequiredArgsConstructor
 public class UserService {
 
-    @Autowired
-    private UserRepository userRepository;
-    @Autowired
-    private JwtTokenProvider tokenProvider;
-    @Autowired
-    private UserMapper userMapper;
-    @Autowired
-    private CloudinaryService cloudinaryService;
-    @Autowired
-    private SocialLoginService socialLoginService;
-//    @Autowired
-//    private UserCacheService userCacheService;
-    @Autowired
-    private VerificationTokenService verificationTokenService;
-//    @Autowired
-//    private ActiveUserService activeUserService;
-//    @Autowired
-//    private RedisTemplate<String,Object> redisTemplate;
-    @Autowired
-    private JwtTokenProvider jwtTokenProvider;
-    @Autowired
-    private CookieService cookieService;
+    private final UserRepository userRepository;
+    private final JwtTokenProvider tokenProvider;
+
+    private final UserMapper userMapper;
+    private final CloudinaryService cloudinaryService;
+    private final SocialLoginService socialLoginService;
+//    private final UserCacheService userCacheService;
+    private final VerificationTokenService verificationTokenService;
+//    private final ActiveUserService activeUserService;
+//    private final RedisTemplate<String,Object> redisTemplate;
+    private final JwtTokenProvider jwtTokenProvider;
+    private final CookieService cookieService;
 
     @Value("${app.jwt.expiration-milliseconds}")
     private long maxAge;
@@ -111,11 +103,11 @@ public class UserService {
 
         String token = tokenProvider.generateToken(user);
 
-        String cookie = cookieService.issueToken(token);
+        // String cookie = cookieService.issueToken(token);
 
         // activeUserService.incrementActiveUserCount();
 
-        return ResponseEntity.ok().header(HttpHeaders.SET_COOKIE,cookie).body("Login successfully");
+        return ResponseEntity.ok(token);
     }
 
     @LogExecutionTime(value = "Fetching all users in UserService class",doSave = false)
