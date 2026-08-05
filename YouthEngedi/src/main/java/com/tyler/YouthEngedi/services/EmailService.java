@@ -32,6 +32,7 @@ import java.time.LocalDateTime;
 import java.util.Set;
 
 import static com.tyler.YouthEngedi.constants.UrlConstants.*;
+import static com.tyler.YouthEngedi.services.CookieService.production;
 
 @Service
 @RequiredArgsConstructor
@@ -829,7 +830,7 @@ public class EmailService {
     @Async
     public void sendVerificationEmail(String email, String token) throws MessagingException {
 
-        String link = String.format(FRONTEND_VERIFICATION_PROD,token,email);
+        String link = String.format(production ? FRONTEND_VERIFICATION_PROD : FRONTEND_VERIFICATION_DEV,token,email);
 
         MimeMessage message = mailSender.createMimeMessage();
 
@@ -922,6 +923,7 @@ public class EmailService {
                 link
         );
         helper.setTo(email);
+        //helper.setFrom("");
         helper.setSubject(subject);
         helper.setText(body,true);
 

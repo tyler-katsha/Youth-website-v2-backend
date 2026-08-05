@@ -12,8 +12,8 @@ public class CookieService {
     @Value("${app.jwt.expiration-milliseconds}")
     private long maxAge;
 
-    @Value("${app.production}")
-    public static boolean production;
+    public static final boolean production = true;
+
     public Cookie resetToken(){
         Cookie cookie = new Cookie("jwt-token",null);
         cookie.setPath("/");

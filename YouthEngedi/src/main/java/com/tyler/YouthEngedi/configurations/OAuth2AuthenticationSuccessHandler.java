@@ -101,9 +101,15 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
     private void issueTokenAndRedirect(HttpServletRequest request, HttpServletResponse response, User user) throws IOException {
         String token = tokenProvider.generateToken(user);
 
-        response.addHeader(HttpHeaders.SET_COOKIE,cookieService.issueToken(token));
+        //response.addHeader(HttpHeaders.SET_COOKIE,cookieService.issueToken(token));
 
-        getRedirectStrategy().sendRedirect(request, response, production ? FRONTEND_OAUTH_PROD : FRONTEND_OAUTH_DEV);
+        String baseUrl = production ? FRONTEND_OAUTH_PROD : FRONTEND_OAUTH_DEV;
+        String targetUrl = UriComponentsBuilder.fromUriString(baseUrl)
+                .queryParam("token", token)
+                .build()
+                .toUriString();
+
+        getRedirectStrategy().sendRedirect(request, response, targetUrl);
     }
 
     private void handleExceptionRedirect(HttpServletRequest request, HttpServletResponse response, String errorCode) throws IOException {
