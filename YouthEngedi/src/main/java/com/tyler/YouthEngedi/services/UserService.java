@@ -7,6 +7,7 @@ import com.tyler.YouthEngedi.Exceptions.ResourceNotFoundException;
 import com.tyler.YouthEngedi.Repository.UserRepository;
 import com.tyler.YouthEngedi.annotations.LogExecutionTime;
 import com.tyler.YouthEngedi.jwts.JwtTokenProvider;
+import com.tyler.YouthEngedi.models.PasswordResetRequest;
 import com.tyler.YouthEngedi.models.User;
 import com.tyler.YouthEngedi.models.dtos.*;
 import com.tyler.YouthEngedi.models.enums.AuthProvider;
@@ -97,6 +98,7 @@ public class UserService {
             verificationTokenService.sendVerificationLink(user);
             throw new LockedAccountException("Account is Locked. Please continue as guest and contact an youth leader or admin or verify account before attempting to login.");
         }
+
         if(!passwordEncoder.matches(request.getPassword(), user.getPassword())){
             throw new AuthorizationException("Invalid credentials");
         }
@@ -115,6 +117,7 @@ public class UserService {
 
         try{
             Page<User> userPage = userRepository.findAll(PageRequest.of(page,size,Sort.by(Sort.Direction.DESC,"createdAt")));
+
 
             Page<UserResponse> responsePage = userPage.map(userMapper::mapToResponse);
 
@@ -171,23 +174,22 @@ public class UserService {
     public void upgradeMemberRole(String email){
         try{
             User existingUser = userRepository.findByEmail(email).orElseThrow(() -> new ResourceNotFoundException("User not found"));
-
+            Set<Role> tempRoles = new HashSet<>();
             if(existingUser.getRoles().contains(Role.YOUTH_LEADER) && existingUser.getRoles().size() == 1){
-                Set<Role> roles = new HashSet<>();
-                roles.add(Role.MEMBER);
-                roles.add(Role.YOUTH_LEADER);
 
-                existingUser.setRoles(roles);
+                tempRoles.add(Role.MEMBER);
+                tempRoles.add(Role.YOUTH_LEADER);
+
+                existingUser.setRoles(tempRoles);
                 return;
             }
 
             if(existingUser.getRoles().contains(Role.ADMIN) && existingUser.getRoles().size() == 1){
-                Set<Role> roles = new HashSet<>();
-                roles.add(Role.MEMBER);
-                roles.add(Role.YOUTH_LEADER);
-                roles.add(Role.ADMIN);
+                tempRoles.add(Role.MEMBER);
+                tempRoles.add(Role.YOUTH_LEADER);
+                tempRoles.add(Role.ADMIN);
 
-                existingUser.setRoles(roles);
+                existingUser.setRoles(tempRoles);
                 return;
             }
             if(existingUser.getRoles().contains(Role.ADMIN)){
@@ -232,17 +234,17 @@ public class UserService {
 
 
 
-    @LogExecutionTime("Soft Delete in UserService class")
-    public ResponseEntity<String> deleteAccount(long userId,String token){
+    @LogExecutionTime(value = "Hard Delete in UserService class",doSave = false)
+    public ResponseEntity<String> deleteAccount(long userId){
 
         User user = userRepository.findById(userId).orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
-        user.setEnabled(true);
-        userRepository.save(user);
+        userRepository.delete(user);
 
-        long time = jwtTokenProvider.getRemainingSessionTimeInSeconds(token);
-        long hours = time / 60;
-        return ResponseEntity.ok("Successfully deactivated your account time remaining from session: " + hours + " hrs remaining");
+        return ResponseEntity.ok("User was removed successfully");
+        // long time = jwtTokenProvider.getRemainingSessionTimeInSeconds(token);
+        // long hours = time / 60;
+        // return ResponseEntity.ok("Successfully deactivated your account time remaining from session: " + hours + " hrs remaining");
     }
 
     @LogExecutionTime(value = "Soft Delete in UserService class",doSave = false)
@@ -251,29 +253,26 @@ public class UserService {
         try{
             User user = userRepository.findByEmail(email).orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
-            // user.setDeleted(true);
             user.setEnabled(false);
-            User updatedUser = userRepository.save(user);
+            userRepository.save(user);
 
-            return ResponseEntity.ok(updatedUser);
+            return ResponseEntity.ok("User was deactivated successfully");
         } catch (Exception e){
-            e.printStackTrace();
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
-    @LogExecutionTime(value = "Soft Activate in UserService class",doSave = false)
+    @LogExecutionTime(value = "Activate in UserService class",doSave = false)
     public ResponseEntity<?> activateMember(String email){
 
         try{
             User user = userRepository.findByEmail(email).orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
             user.setEnabled(true);
-            User updatedUser = userRepository.save(user);
+            userRepository.save(user);
 
-            return ResponseEntity.ok(updatedUser);
+            return ResponseEntity.ok("User was activated successfully");
         } catch (Exception e){
-            e.printStackTrace();
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
@@ -284,8 +283,8 @@ public class UserService {
             userRepository.save(user);
     }
 
-    @LogExecutionTime(value = "Logout User")
-    public ResponseEntity<?> logout(HttpServletResponse response,long userId) {
+    @LogExecutionTime(value = "Logout User",doSave = false)
+    public ResponseEntity<?> logout(HttpServletResponse response) {
 
         Cookie cookie = cookieService.resetToken();
 
@@ -309,7 +308,8 @@ public class UserService {
         String token = tokenProvider.generateToken(guestUser);
 
         // activeUserService.incrementActiveUserCount();
-        return ResponseEntity.ok().header(HttpHeaders.SET_COOKIE,cookieService.issueToken(token,maxAge/2)).body("Successfully continued as guest");
+        //return ResponseEntity.ok().header(HttpHeaders.SET_COOKIE,cookieService.issueToken(token,maxAge/2)).body("Successfully continued as guest");
+        return ResponseEntity.ok(token);
     }
 
 //    public Set<String> findActiveUsers() {
@@ -406,14 +406,20 @@ public class UserService {
         return newSet;
     }
 
-    public void resetPassword(long userId,String password) {
+    public void resetPassword(long userId, PasswordResetRequest request) {
 
-        User existingUser = userRepository.findById(userId).orElseThrow(() -> new ResourceNotFoundException("User doesn't exist"));
+        User existingUser;
+        if(userId == 0L){
+            existingUser = userRepository.findById(userId).orElseThrow(() -> new ResourceNotFoundException("User doesn't exist"));
+
+        } else{
+            existingUser = userRepository.findByEmail(request.getEmail()).orElseThrow(() -> new ResourceNotFoundException("User doesn't exist"));
+        }
 
         if(existingUser.getAuthProvider().equals(AuthProvider.OAUTH2)){
             throw new PasswordResetException("Cannot change password for a OAuth based user");
         }
-        existingUser.setPassword(passwordEncoder.encode(password));
+        existingUser.setPassword(passwordEncoder.encode(request.getPassword()));
         userRepository.save(existingUser);
     }
 

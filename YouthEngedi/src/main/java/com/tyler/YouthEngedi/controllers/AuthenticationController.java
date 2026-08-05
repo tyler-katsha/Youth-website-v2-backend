@@ -3,6 +3,7 @@ package com.tyler.YouthEngedi.controllers;
 import com.tyler.YouthEngedi.Exceptions.*;
 import com.tyler.YouthEngedi.Repository.UserRepository;
 import com.tyler.YouthEngedi.Repository.VerificationTokenRepository;
+import com.tyler.YouthEngedi.models.PasswordResetRequest;
 import com.tyler.YouthEngedi.models.User;
 import com.tyler.YouthEngedi.models.UserPrincipal;
 import com.tyler.YouthEngedi.models.VerificationToken;
@@ -54,7 +55,7 @@ public class AuthenticationController {
         } catch (AuthorizationException e){
             return new ResponseEntity<>("Email already exist",HttpStatus.CONFLICT);
         } catch (Exception e){
-            return new ResponseEntity<>("Bad request",HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>("Something went wrong. Please try again",HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -82,7 +83,7 @@ public class AuthenticationController {
         } catch (ResourceNotFoundException e){
             return new ResponseEntity<>("Failed to login",HttpStatus.INTERNAL_SERVER_ERROR);
         } catch (Exception e){
-            return new ResponseEntity<>("Bad request",HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>("Something went wrong. Please try again",HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -93,17 +94,17 @@ public class AuthenticationController {
         } catch (ResourceNotFoundException e){
             return new ResponseEntity<>("Failed to continue as guest",HttpStatus.INTERNAL_SERVER_ERROR);
         } catch (Exception e){
-            return new ResponseEntity<>("Bad request",HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>("Something went wrong. Please try again",HttpStatus.BAD_REQUEST);
         }
     }
     @PostMapping("/logout")
-    public ResponseEntity<?> logout(HttpServletResponse response, @AuthenticationPrincipal UserPrincipal principal){
+    public ResponseEntity<?> logout(HttpServletResponse response){
         try{
-            return userService.logout(response, principal.getUserId());
+            return userService.logout(response);
         } catch (ResourceNotFoundException e){
             return new ResponseEntity<>("Failed to logout",HttpStatus.INTERNAL_SERVER_ERROR);
         } catch (Exception e){
-            return new ResponseEntity<>("Bad request",HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>("Something went wrong. Please try again",HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -131,21 +132,21 @@ public class AuthenticationController {
         } catch (ResourceNotFoundException e){
             return new ResponseEntity<>("Failed to verify user",HttpStatus.INTERNAL_SERVER_ERROR);
         } catch (Exception e){
-            return new ResponseEntity<>("Bad request",HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>("Something went wrong. Please try again",HttpStatus.BAD_REQUEST);
         }
     }
 
     @PostMapping("/forgot-password")
-    public ResponseEntity<String> resetPassword(@AuthenticationPrincipal UserPrincipal principal,@RequestBody String password){
+    public ResponseEntity<String> resetPassword(@AuthenticationPrincipal UserPrincipal principal,@RequestBody PasswordResetRequest request){
         try{
-            userService.resetPassword(principal.getUserId(),password);
+            userService.resetPassword(principal.getUserId(),request);
             return new ResponseEntity<>("Verify sent to inbox",HttpStatus.OK);
         } catch(PasswordResetException e){
-            return new ResponseEntity<>(e.getMessage(),HttpStatus.FORBIDDEN);
+            return new ResponseEntity<>(e.getMessage(),HttpStatus.NOT_ACCEPTABLE);
         } catch (ResourceNotFoundException e){
             return new ResponseEntity<>("Failed to verify user",HttpStatus.INTERNAL_SERVER_ERROR);
         } catch (Exception e){
-            return new ResponseEntity<>("Something went wrong",HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>("Something went wrong. Please try again",HttpStatus.BAD_REQUEST);
         }
     }
 }

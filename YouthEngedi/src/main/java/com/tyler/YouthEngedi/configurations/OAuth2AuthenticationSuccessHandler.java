@@ -67,18 +67,12 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
 
         if (oAuthToUser.isPresent()) {
             user = oAuthToUser.get();
-
-            // Check if account is disabled safely
-            if (!user.isEnabled()) {
-                verificationTokenService.sendVerificationLink(user);
-                handleExceptionRedirect(request, response, "account_disabled");
-                return;
-            }
-
             user.setName(name);
+
             user.setDateOfBirth(dateOfBirth);
             user.setProfileImageUrl(profileImageUrl);
-
+            user.setEmail(user.getEmail());
+            user.setEnabled(true);
             user = userRepository.save(user);
 
         } else {
