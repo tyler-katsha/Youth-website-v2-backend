@@ -21,7 +21,6 @@ import java.util.concurrent.CompletableFuture;
 @Service
 @RequiredArgsConstructor
 public class VerificationTokenService {
-    private final static Logger logger = LogManager.getLogger(VerificationTokenService.class);
 
     private final VerificationTokenRepository verificationTokenRepository;
     private final UserRepository userRepository;
@@ -79,11 +78,7 @@ public class VerificationTokenService {
     @Async
     public void sendTokenEmail(final String email,final String token){
         CompletableFuture.runAsync(() -> {
-            try{
-                emailService.sendVerificationEmail(email,token);
-            } catch (MessagingException e){
-                logger.error("Failed to send email to {} ",email,e);
-            }
+            emailService.sendVerificationEmail(email,token);
         });
     }
 }

@@ -1,6 +1,7 @@
 package com.tyler.YouthEngedi.services;
 
 import com.tyler.YouthEngedi.Exceptions.ResourceNotFoundException;
+import com.tyler.YouthEngedi.Exceptions.RoleRequestPendingException;
 import com.tyler.YouthEngedi.Repository.RoleRequestRepository;
 import com.tyler.YouthEngedi.Repository.UserRepository;
 import com.tyler.YouthEngedi.annotations.LogExecutionTime;
@@ -10,6 +11,7 @@ import com.tyler.YouthEngedi.models.dtos.RoleChangeRequest;
 import com.tyler.YouthEngedi.models.enums.RequestStatus;
 import com.tyler.YouthEngedi.models.enums.Role;
 import com.tyler.YouthEngedi.models.mappers.RoleRequestMapper;
+import com.tyler.YouthEngedi.utils.HtmlTemplate;
 import jakarta.mail.MessagingException;
 import lombok.RequiredArgsConstructor;
 import org.apache.logging.log4j.LogManager;
@@ -34,30 +36,21 @@ public class RoleRequestService {
     private final RoleRequestMapper roleRequestMapper;
 
     @LogExecutionTime(value="Fetch all roleRequests in RoleRequestService class",doSave = false)
-    public ResponseEntity<Page<RoleChangeRequest>> findAllRoleRequests(int page, int size) {
+    public Page<RoleChangeRequest> findAllRoleRequests(int page, int size) {
 
         Page<RoleRequest> roleRequests = repository.findAll(PageRequest.of(page,size));
 
-        Page<RoleChangeRequest> roleChangeRequests = roleRequests.map(roleRequestMapper::mapToRoleChangeRequest);
-
-        return ResponseEntity.ok(roleChangeRequests);
+        return roleRequests.map(roleRequestMapper::mapToRoleChangeRequest);
     }
 
     @LogExecutionTime(value="Sent a role request to developer in RoleRequestService class",doSave = false)
-    public ResponseEntity<?> sendRoleRequest(long userId) {
-        try{
+    public void sendRoleRequest(long userId) {
             User user = userRepository.findById(userId).orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
             if(repository.existsByUserAndRequestStatus(user,RequestStatus.PENDING)){
-                return new ResponseEntity<>("Request is still being processed",HttpStatus.CONFLICT);
+                throw new RoleRequestPendingException("Request is still being processed");
             }
             requestUpgrade(user);
-            return new ResponseEntity<>(HttpStatus.OK);
-        } catch (Exception e){
-            e.printStackTrace();
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-        }
-
     }
 
     @LogExecutionTime(value="Building role request and updating user status in RoleUpgradeService class",doSave = false)
@@ -77,82 +70,12 @@ public class RoleRequestService {
                 .build();
 
         String subject = "Role Request Submitted Successfully";
-        String body = String.format("""
-    <!DOCTYPE html>
-    <html>
-    <head>
-        <meta charset="UTF-8">
-    </head>
-    <body style="margin:0;padding:20px;background:#f4f4f4;font-family:Arial,sans-serif;">
+        String body = HtmlTemplate.roleRequestUpgrade();
 
-        <table width="100%%" cellpadding="0" cellspacing="0">
-            <tr>
-                <td align="center">
+        emailService.sendEmail(user.getEmail(),subject,body);
 
-                    <table width="600" cellpadding="0" cellspacing="0"
-                           style="background:#ffffff;border-radius:8px;overflow:hidden;
-                                  box-shadow:0 2px 8px rgba(0,0,0,0.1);">
-
-                        <tr>
-                            <td style="background:#f59e0b;padding:25px;text-align:center;color:#ffffff;">
-                                <h1 style="margin:0;">Role Request Submitted</h1>
-                            </td>
-                        </tr>
-
-                        <tr>
-                            <td style="padding:30px;color:#333333;line-height:1.6;">
-
-                                <p>Hello,</p>
-
-                                <p>
-                                    Your role request has been submitted successfully.
-                                </p>
-
-                                <p>
-                                    An administrator will review your application and notify you of
-                                    their decision via email.
-                                </p>
-
-                                <p>
-                                    No further action is required from you at this time.
-                                </p>
-
-                                <p>
-                                    Thank you for your willingness to serve the Youth Engedi community.
-                                </p>
-
-                                <p>
-                                    God bless,<br>
-                                    <strong>Engedi Administration</strong>
-                                </p>
-
-                            </td>
-                        </tr>
-
-                        <tr>
-                            <td style="padding:15px;background:#f3f4f6;
-                                       text-align:center;font-size:12px;color:#6b7280;">
-                                This is an automated message from the Youth Engedi Management System.
-                            </td>
-                        </tr>
-
-                    </table>
-
-                </td>
-            </tr>
-        </table>
-
-    </body>
-    </html>
-    """);
-
-        try{
-            emailService.sendEmail(user.getEmail(),subject,body);
-        } catch (MessagingException e){
-            // change null to user before going to production
-            logger.error("Failed to send email to {} with subject {}",user.getEmail(),subject,e);
-        }
         emailService.sendAdminRequest(request);
+
         repository.save(request);
     }
 
@@ -227,8 +150,6 @@ public class RoleRequestService {
         } catch (IllegalArgumentException e){
             e.printStackTrace();
         }
-
-
     }
 
 }

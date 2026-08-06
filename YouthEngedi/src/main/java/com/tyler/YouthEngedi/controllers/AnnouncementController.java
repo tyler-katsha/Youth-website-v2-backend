@@ -2,10 +2,9 @@ package com.tyler.YouthEngedi.controllers;
 
 import com.tyler.YouthEngedi.Exceptions.ResourceNotFoundException;
 import com.tyler.YouthEngedi.models.dtos.AnnouncementDto;
-import com.tyler.YouthEngedi.models.dtos.ApiResponse;
+import com.tyler.YouthEngedi.models.dtos.ApiResult;
 import com.tyler.YouthEngedi.services.AnnouncementService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -24,9 +23,9 @@ public class AnnouncementController {
         try{
             return ResponseEntity.ok(announcementService.findAll(page,size));
         } catch (ResourceNotFoundException e){
-            return new ResponseEntity<>(new ApiResponse(false,"Failed to verify user"),HttpStatus.INTERNAL_SERVER_ERROR);
+            return new ResponseEntity<>(new ApiResult(false,"Failed to verify user"),HttpStatus.INTERNAL_SERVER_ERROR);
         } catch (Exception e){
-            return new ResponseEntity<>(new ApiResponse(false,"Something went wrong. Please try again later."), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new ApiResult(false,"Something went wrong. Please try again later."), HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -36,52 +35,52 @@ public class AnnouncementController {
         try{
             return ResponseEntity.ok(announcementService.findById(id));
         } catch (ResourceNotFoundException e){
-            return new ResponseEntity<>(new ApiResponse(false,"Unable to find announcement"),HttpStatus.INTERNAL_SERVER_ERROR);
+            return new ResponseEntity<>(new ApiResult(false,"Unable to find announcement"),HttpStatus.INTERNAL_SERVER_ERROR);
         } catch (Exception e){
-            return new ResponseEntity<>(new ApiResponse(false,"Something went wrong. Please try again later."), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new ApiResult(false,"Something went wrong. Please try again later."), HttpStatus.BAD_REQUEST);
         }
     }
 
     @PostMapping("/announcements")
     @PreAuthorize("hasAnyRole('ADMIN','YOUTH_LEADER')")
-    public ResponseEntity<ApiResponse> createAnnouncement(AnnouncementDto request){
+    public ResponseEntity<ApiResult> createAnnouncement(AnnouncementDto request){
         try{
             announcementService.createAnnouncement(request);
-            return ResponseEntity.ok(new ApiResponse(true,"Successfully created announcement"));
+            return ResponseEntity.ok(new ApiResult(true,"Successfully created announcement"));
         } catch (ResourceNotFoundException e){
-            return new ResponseEntity<>(new ApiResponse(false,"Failed to create a announcement"),HttpStatus.INTERNAL_SERVER_ERROR);
+            return new ResponseEntity<>(new ApiResult(false,"Failed to create a announcement"),HttpStatus.INTERNAL_SERVER_ERROR);
         } catch (Exception e){
-            return new ResponseEntity<>(new ApiResponse(false,"Something went wrong. Please try again later."), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new ApiResult(false,"Something went wrong. Please try again later."), HttpStatus.BAD_REQUEST);
         }
     }
 
     @PutMapping("/announcements")
     @PreAuthorize("hasAnyRole('ADMIN','YOUTH_LEADER')")
-    public ResponseEntity<ApiResponse> updateAnnouncement(AnnouncementDto request){
+    public ResponseEntity<ApiResult> updateAnnouncement(AnnouncementDto request){
         try{
             announcementService.updateAnnouncement(request);
-            return ResponseEntity.ok(new ApiResponse(true,"Successfully updated announcement"));
+            return ResponseEntity.ok(new ApiResult(true,"Successfully updated announcement"));
         } catch (ResourceNotFoundException e){
-            return new ResponseEntity<>(new ApiResponse(false,"Announcement doesn't exist"),HttpStatus.INTERNAL_SERVER_ERROR);
+            return new ResponseEntity<>(new ApiResult(false,"Announcement doesn't exist"),HttpStatus.INTERNAL_SERVER_ERROR);
         } catch (Exception e){
-            return new ResponseEntity<>(new ApiResponse(false,"Something went wrong. Please try again later."), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new ApiResult(false,"Something went wrong. Please try again later."), HttpStatus.BAD_REQUEST);
         }
     }
 
     @DeleteMapping("/announcements/{id}")
     @PreAuthorize("hasAnyRole('ADMIN','YOUTH_LEADER')")
-    public ResponseEntity<ApiResponse> deleteAnnouncement(@PathVariable long id){
+    public ResponseEntity<ApiResult> deleteAnnouncement(@PathVariable long id){
         try{
             announcementService.deleteAnnouncement(id);
-            return ResponseEntity.ok(new ApiResponse(true,"Successfully deleted announcement"));
+            return ResponseEntity.ok(new ApiResult(true,"Successfully deleted announcement"));
         } catch (ResourceNotFoundException e){
-            return new ResponseEntity<>(new ApiResponse(false,"Announcement doesn't exist"),HttpStatus.INTERNAL_SERVER_ERROR);
+            return new ResponseEntity<>(new ApiResult(false,"Announcement doesn't exist"),HttpStatus.INTERNAL_SERVER_ERROR);
         } catch (Exception e){
-            return new ResponseEntity<>(new ApiResponse(false,"Something went wrong. Please try again later."), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new ApiResult(false,"Something went wrong. Please try again later."), HttpStatus.BAD_REQUEST);
         }
     }
 
-//    @PreAuthorize("hasAnyRole('ADMIN','YOUTH_LEADER','MEMBER')")
+//    @PreAuthorize("hasRole('ADMIN')")
 //    @GetMapping("/tempControllerMethod")
 //    public ResponseEntity<String> TempControllerMethod(){
 //        announcementService.tempMethod();

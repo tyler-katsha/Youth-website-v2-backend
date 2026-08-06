@@ -1,26 +1,22 @@
 package com.tyler.YouthEngedi.controllers;
 
-import com.tyler.YouthEngedi.Exceptions.EventException;
 import com.tyler.YouthEngedi.Exceptions.ResourceNotFoundException;
 import com.tyler.YouthEngedi.models.UserPrincipal;
-import com.tyler.YouthEngedi.models.dtos.ApiResponse;
+import com.tyler.YouthEngedi.models.dtos.ApiResult;
 import com.tyler.YouthEngedi.models.dtos.EventRequest;
-import com.tyler.YouthEngedi.models.dtos.EventResponse;
 import com.tyler.YouthEngedi.services.EventService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/event")
 @RequiredArgsConstructor
+@Tag(name="Event Management",description = "Api for fetching and managing events")
 public class EventController {
 
     private final EventService eventService;
@@ -31,9 +27,9 @@ public class EventController {
         try{
             return ResponseEntity.ok(eventService.createEvent(request,principal.getUserId()));
         } catch (ResourceNotFoundException e){
-            return new ResponseEntity<>(new ApiResponse(false,e.getMessage()),HttpStatus.NOT_FOUND);
+            return new ResponseEntity<>(new ApiResult(false,e.getMessage()),HttpStatus.NOT_FOUND);
         } catch (Exception e){
-            return new ResponseEntity<>(new ApiResponse(false,"Something went wrong. Please try again later."),HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new ApiResult(false,"Something went wrong. Please try again later."),HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -43,9 +39,9 @@ public class EventController {
         try{
             return ResponseEntity.ok(eventService.findAllEvents());
         } catch (ResourceNotFoundException e){
-            return new ResponseEntity<>(new ApiResponse(false,e.getMessage()),HttpStatus.NOT_FOUND);
+            return new ResponseEntity<>(new ApiResult(false,e.getMessage()),HttpStatus.NOT_FOUND);
         } catch (Exception e){
-            return new ResponseEntity<>(new ApiResponse(false,"Something went wrong. Please try again later."),HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new ApiResult(false,"Something went wrong. Please try again later."),HttpStatus.BAD_REQUEST);
         }
     }
     @PreAuthorize("hasAnyRole('ADMIN','MEMBER','YOUTH_LEADER')")
@@ -54,9 +50,9 @@ public class EventController {
         try{
             return ResponseEntity.ok(eventService.getEventsByDate(date));
         } catch (ResourceNotFoundException e){
-            return new ResponseEntity<>(new ApiResponse(false,e.getMessage()),HttpStatus.NOT_FOUND);
+            return new ResponseEntity<>(new ApiResult(false,e.getMessage()),HttpStatus.NOT_FOUND);
         } catch (Exception e){
-            return new ResponseEntity<>(new ApiResponse(false,"Something went wrong. Please try again later."),HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new ApiResult(false,"Something went wrong. Please try again later."),HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -64,11 +60,11 @@ public class EventController {
     @DeleteMapping("/events/{eventId}")
     public ResponseEntity<?> removeEvent(@PathVariable long eventId){
         try{
-            return ResponseEntity.ok(eventService.removeEvent(eventId));
+            return ResponseEntity.ok(new ApiResult(true,eventService.removeEvent(eventId)));
         } catch (ResourceNotFoundException e){
-            return new ResponseEntity<>(new ApiResponse(false,e.getMessage()),HttpStatus.NOT_FOUND);
+            return new ResponseEntity<>(new ApiResult(false,e.getMessage()),HttpStatus.NOT_FOUND);
         } catch (Exception e){
-            return new ResponseEntity<>(new ApiResponse(false,"Something went wrong. Please try again later."),HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new ApiResult(false,"Something went wrong. Please try again later."),HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -78,9 +74,9 @@ public class EventController {
         try{
             return ResponseEntity.ok(eventService.updateEvent(eventId,request,principal.getUserId()));
         } catch (ResourceNotFoundException e){
-            return new ResponseEntity<>(new ApiResponse(false,e.getMessage()),HttpStatus.NOT_FOUND);
+            return new ResponseEntity<>(new ApiResult(false,e.getMessage()),HttpStatus.NOT_FOUND);
         } catch (Exception e){
-            return new ResponseEntity<>(new ApiResponse(false,"Something went wrong. Please try again later."),HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new ApiResult(false,"Something went wrong. Please try again later."),HttpStatus.BAD_REQUEST);
         }
     }
 

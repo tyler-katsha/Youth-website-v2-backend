@@ -23,13 +23,13 @@ public class ImageService {
     private final ImageRepository imageRepository;
     private final CloudinaryService cloudinaryService;
 
-    public ResponseEntity<Page<Image>> findAll(int page,int size){
-        return ResponseEntity.ok(imageRepository.findAll(PageRequest.of(page,size)));
+    public Page<Image> findAll(int page,int size){
+        return imageRepository.findAll(PageRequest.of(page,size));
     }
 
     @AuditAction("Uploading images to Object storage using Cloudinary")
     @LogExecutionTime(value="Uploading images to Object storage using Cloudinary")
-    public ResponseEntity<?> uploadImage(MultipartFile multipartFile) {
+    public String uploadImage(MultipartFile multipartFile) {
 
         String url = cloudinaryService.upload(multipartFile);
         String size = cloudinaryService.getFileFormattedSize(multipartFile);
@@ -44,7 +44,7 @@ public class ImageService {
                 .build();
         imageRepository.save(image);
 
-        return ResponseEntity.ok("Image uploaded to database");
+        return "Image uploaded to database";
     }
 
     @AuditAction("Uploading images to Object storage using Cloudinary in chunks")
@@ -53,7 +53,7 @@ public class ImageService {
         cloudinaryService.processChunk(fragmentedImage);
     }
 
-    @LogExecutionTime(value="Removing image by id from Object storage")
+    @LogExecutionTime(value="Removing image by id from Object storage",doSave = false)
     public void deleteImage(long id){
         Image image = imageRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("No Image found"));
         imageRepository.delete(image);

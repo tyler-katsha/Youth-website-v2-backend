@@ -2,11 +2,12 @@ package com.tyler.YouthEngedi.controllers;
 
 import com.tyler.YouthEngedi.Exceptions.ResourceNotFoundException;
 import com.tyler.YouthEngedi.models.UserPrincipal;
-import com.tyler.YouthEngedi.models.dtos.ApiResponse;
+import com.tyler.YouthEngedi.models.dtos.ApiResult;
 import com.tyler.YouthEngedi.models.dtos.ProfileRequest;
 import com.tyler.YouthEngedi.models.dtos.UserResponse;
 import com.tyler.YouthEngedi.services.UserService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -21,7 +22,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/v1")
 @RequiredArgsConstructor
-@Tag(name=" User Management", description = "Apis for fetching and managing users")
+@Tag(name=" User Management", description = "Api for fetching and managing users")
 public class UserController {
 
     private final UserService userService;
@@ -29,13 +30,13 @@ public class UserController {
     @PreAuthorize("hasAnyRole('ADMIN','YOUTH_LEADER')")
     @GetMapping("/users")
     @Operation(summary = "Finds all the users with a certain amount of pages for each request",description = "Fetches all the users in the database")
-    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode="200",description="Users are found successfully.")
-    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode="404",description="An error was thrown maybe like a database offline.")
-    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode="400",description="Users was not found in the database")
-    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode="500",description="An generic exception was thrown and something went wrong")
+    @ApiResponse(responseCode="200",description="Users are found successfully.")
+    @ApiResponse(responseCode="404",description="An error was thrown maybe like a database offline.")
+    @ApiResponse(responseCode="400",description="Users was not found in the database")
+    @ApiResponse(responseCode="500",description="An generic exception was thrown and something went wrong")
     public ResponseEntity<Page<UserResponse>> findAll(@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "100") int size){
         try{
-            return userService.findAll(page,size);
+            return ResponseEntity.ok(userService.findAll(page,size));
         } catch (ResourceNotFoundException e){
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         } catch (Exception e){
@@ -47,65 +48,66 @@ public class UserController {
     @PreAuthorize("hasAnyRole('ADMIN','MEMBER','YOUTH_LEADER')")
     @GetMapping("/users/me")
     @Operation(summary = "Finds a user based on there user id that the user logged with and injects it into the jwt token",description = "Fetches user based on there unique ID")
-    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200",description = "Successfully finds users profile details")
-    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404",description = "User information was not found")
-    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500",description = "An error has occurred with the system")
+    @ApiResponse(responseCode = "200",description = "Successfully finds users profile details")
+    @ApiResponse(responseCode = "404",description = "User information was not found")
+    @ApiResponse(responseCode = "500",description = "An error has occurred with the system")
     public ResponseEntity<?> findUserProfile(@AuthenticationPrincipal UserPrincipal principal){
         try{
-            return userService.findById(principal.getUserId());
+            return ResponseEntity.ok(userService.findById(principal.getUserId()));
         } catch (ResourceNotFoundException e){
-            return new ResponseEntity<>(new ApiResponse(false,e.getMessage()),HttpStatus.NOT_FOUND);
+            return new ResponseEntity<>(new ApiResult(false,e.getMessage()),HttpStatus.NOT_FOUND);
         } catch (Exception e){
-            return new ResponseEntity<>(new ApiResponse(false,"Something went wrong. Please try again later."),HttpStatus.INTERNAL_SERVER_ERROR);
+            return new ResponseEntity<>(new ApiResult(false,"Something went wrong. Please try again later."),HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
     @PreAuthorize("hasAnyRole('ADMIN','YOUTH_LEADER','MEMBER')")
     @PutMapping(value = "/users/update-me",consumes= MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "Updates a user's profile information",description = "Fetches user data from the request body and updates the user's attributes")
-    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200",description = "User's details was successfully added to the database")
-    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404",description = "User was not found based with there ID")
-    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400",description = "User data was inserted properly into the ProfileRequest body")
-    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500",description = "An error has occurred with the system")
+    @ApiResponse(responseCode = "200",description = "User's details was successfully added to the database")
+    @ApiResponse(responseCode = "404",description = "User was not found based with there ID")
+    @ApiResponse(responseCode = "400",description = "User data was inserted properly into the ProfileRequest body")
+    @ApiResponse(responseCode = "500",description = "An error has occurred with the system")
     public ResponseEntity<?> updateProfile(@ModelAttribute ProfileRequest request, @AuthenticationPrincipal UserPrincipal principal){
         try{
             return userService.updateProfile(request,principal.getUserId());
         } catch (ResourceNotFoundException e){
-            return new ResponseEntity<>(new ApiResponse(false,e.getMessage()),HttpStatus.NOT_FOUND);
+            return new ResponseEntity<>(new ApiResult(false,e.getMessage()),HttpStatus.NOT_FOUND);
         } catch (Exception e){
-            return new ResponseEntity<>(new ApiResponse(false,"Something went wrong. Please try again later."),HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new ApiResult(false,"Something went wrong. Please try again later."),HttpStatus.BAD_REQUEST);
         }
     }
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/users/role/{email}/upgrade")
     @Operation(summary = "Finds user based on email and adds the next role if they are not admin already.",description = "This uses a method to add a level higher than the current one and returns the next level and adds it to the set and sets the users roles into a hashSet.")
-    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200",description = "User's Set of roles was successfully updated with some edge cases included. Role/s were added.")
-    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404",description = "User was not found based with there email")
-    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400",description = "An error has occurred with the system")
+    @ApiResponse(responseCode = "200",description = "User's Set of roles was successfully updated with some edge cases included. Role/s were added.")
+    @ApiResponse(responseCode = "404",description = "User was not found based with there email")
+    @ApiResponse(responseCode = "400",description = "An error has occurred with the system")
     public ResponseEntity<?> upgradeMemberRole(@PathVariable String email){
         try{
             userService.upgradeMemberRole(email);
-            return new ResponseEntity<>("Upgraded user",HttpStatus.OK);
+
+            return new ResponseEntity<>(new ApiResult(true,"Upgraded user"),HttpStatus.OK);
         } catch (ResourceNotFoundException e){
-            return new ResponseEntity<>(new ApiResponse(false,e.getMessage()),HttpStatus.NOT_FOUND);
+            return new ResponseEntity<>(new ApiResult(false,e.getMessage()),HttpStatus.NOT_FOUND);
         } catch (Exception e){
-            return new ResponseEntity<>(new ApiResponse(false,"Something went wrong. Please try again later."),HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new ApiResult(false,"Something went wrong. Please try again later."),HttpStatus.BAD_REQUEST);
         }
     }
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/users/role/{email}/downgrade")
     @Operation(summary = "Finds user based on email and removes the highest role level if they are not a member role already.",description = "This uses a method to removes a current level higher and returns the a set with the previous roles and sets the users with one less role if the user is not a regular member role.")
-    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200",description = "User's Set of roles was successfully updated with some edge cases included. Role/s were removed.")
-    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404",description = "User was not found based with there email")
-    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400",description = "An error has occurred with the system")
+    @ApiResponse(responseCode = "200",description = "User's Set of roles was successfully updated with some edge cases included. Role/s were removed.")
+    @ApiResponse(responseCode = "404",description = "User was not found based with there email")
+    @ApiResponse(responseCode = "400",description = "An error has occurred with the system")
     public ResponseEntity<?> downgradeMemberRole(@PathVariable String email){
         try{
             userService.downgradeMemberRole(email);
-            return new ResponseEntity<>("Downgraded user",HttpStatus.OK);
+            return new ResponseEntity<>(new ApiResult(true,"Downgraded user"),HttpStatus.OK);
         } catch (ResourceNotFoundException e){
-            return new ResponseEntity<>(new ApiResponse(false,e.getMessage()),HttpStatus.NOT_FOUND);
+            return new ResponseEntity<>(new ApiResult(false,e.getMessage()),HttpStatus.NOT_FOUND);
         } catch (Exception e){
-            return new ResponseEntity<>(new ApiResponse(false,"Something went wrong. Please try again later."),HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new ApiResult(false,"Something went wrong. Please try again later."),HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -113,49 +115,49 @@ public class UserController {
     @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/users")
     @Operation(summary = "Uses the user-id to hard delete the user",description = "This removes the user account from the database and anything related to the user")
-    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200",description = "Hard deletes the user's account from the system")
-    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404",description = "User was not found based with there user-id")
-    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400",description = "An error has occurred with the system")
-    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403",description = "Token is not found or expired")
-    public ResponseEntity<?> deleteAccount(@AuthenticationPrincipal UserPrincipal principal /* uncomment after fixing the issues with the token ,@CookieValue(name="jwt-token") String token */){
+    @ApiResponse(responseCode = "200",description = "Hard deletes the user's account from the system")
+    @ApiResponse(responseCode = "404",description = "User was not found based with there user-id")
+    @ApiResponse(responseCode = "400",description = "An error has occurred with the system")
+    @ApiResponse(responseCode = "403",description = "Token is not found or expired")
+    public ResponseEntity<ApiResult> deleteAccount(@AuthenticationPrincipal UserPrincipal principal /* uncomment after fixing the issues with the token ,@CookieValue(name="jwt-token") String token */){
         try{
 
 //            if(token == null){
 //                return new ResponseEntity<>(new ApiResponse(false,"Access Denied! Token missing!"),HttpStatus.FORBIDDEN);
 //            }
 
-            return userService.deleteAccount(principal.getUserId());
+            return ResponseEntity.ok(new ApiResult(true, userService.deleteAccount(principal.getUserId())));
         } catch (ResourceNotFoundException e){
-            return new ResponseEntity<>(new ApiResponse(false,e.getMessage()),HttpStatus.NOT_FOUND);
+            return new ResponseEntity<>(new ApiResult(false,e.getMessage()),HttpStatus.NOT_FOUND);
         } catch (Exception e){
-            return new ResponseEntity<>(new ApiResponse(false,"Something went wrong. Please try again later."),HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new ApiResult(false,"Something went wrong. Please try again later."),HttpStatus.BAD_REQUEST);
         }
     }
 
     @PreAuthorize("hasAnyRole('ADMIN','YOUTH_LEADER','MEMBER')")
     @PutMapping("/users/{email}/deactivate")
     @Operation(summary = "Uses the user-id to soft delete the user",description = "This disables the user account")
-    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404",description = "User was not found based with there user-id")
-    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400",description = "An error has occurred with the system")
-    public ResponseEntity<?> deactivateMember(@PathVariable String email){
+    @ApiResponse(responseCode = "404",description = "User was not found based with there user-id")
+    @ApiResponse(responseCode = "400",description = "An error has occurred with the system")
+    public ResponseEntity<ApiResult> deactivateMember(@PathVariable String email){
         try{
-            return userService.deactivateMember(email);
+            return ResponseEntity.ok(new ApiResult(true,userService.deactivateMember(email)));
         } catch (ResourceNotFoundException e){
-            return new ResponseEntity<>(new ApiResponse(false,e.getMessage()),HttpStatus.NOT_FOUND);
+            return new ResponseEntity<>(new ApiResult(false,e.getMessage()),HttpStatus.NOT_FOUND);
         } catch (Exception e){
-            return new ResponseEntity<>(new ApiResponse(false,"Something went wrong. Please try again later."),HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new ApiResult(false,"Something went wrong. Please try again later."),HttpStatus.BAD_REQUEST);
         }
     }
 
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/users/{email}/activate")
-    public ResponseEntity<?> activateMember(@PathVariable String email){
+    public ResponseEntity<ApiResult> activateMember(@PathVariable String email){
         try{
-            return userService.activateMember(email);
+            return ResponseEntity.ok(new ApiResult(true,userService.activateMember(email)));
         } catch (ResourceNotFoundException e){
-            return new ResponseEntity<>(new ApiResponse(false,e.getMessage()),HttpStatus.NOT_FOUND);
+            return new ResponseEntity<>(new ApiResult(false,e.getMessage()),HttpStatus.NOT_FOUND);
         } catch (Exception e){
-            return new ResponseEntity<>(new ApiResponse(false,"Something went wrong. Please try again later."),HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new ApiResult(false,"Something went wrong. Please try again later."),HttpStatus.BAD_REQUEST);
         }
     }
 }

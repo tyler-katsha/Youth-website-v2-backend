@@ -2,6 +2,7 @@ package com.tyler.YouthEngedi.models;
 
 import com.tyler.YouthEngedi.models.enums.Role;
 import com.tyler.YouthEngedi.models.enums.RequestStatus;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -15,6 +16,7 @@ import java.time.LocalDateTime;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
+@Schema(description = "Details about an document")
 public class RoleRequest {
 
     @Id

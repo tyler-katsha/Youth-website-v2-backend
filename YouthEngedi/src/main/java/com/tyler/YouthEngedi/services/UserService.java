@@ -54,18 +54,13 @@ public class UserService {
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder(12);
 
     @LogExecutionTime("Register new user")
-    public ResponseEntity<?> register(UserRegisterRequest request){
+    public String register(UserRegisterRequest request){
 
         Optional<User> existingUser = userRepository.findByEmail(request.getEmail());
 
         if(existingUser.isPresent()){
-            if(existingUser.get().isEnabled()){
-                return new ResponseEntity<>("User already exist and is verified", HttpStatus.FOUND);
-            } else{
-                verificationTokenService.sendVerificationLink(existingUser.get());
 
-                return new ResponseEntity<>("Verification Email resent. Check your inbox", HttpStatus.OK);
-            }
+            return String.format("Existing user with email: %s already exists. Please use a different email.",request.getEmail());
         }
 
         User user = userMapper.toUser(request);
@@ -75,22 +70,18 @@ public class UserService {
         user.setEnabled(false);
 
         if(request.getProfileImageUrl() != null && !request.getProfileImageUrl().isEmpty()){
-            try{
                 String imageUrl = cloudinaryService.upload(request.getProfileImageUrl());
                 user.setProfileImageUrl(imageUrl);
-            } catch (Exception e){
-                return new ResponseEntity<>("Failed to upload profile Image",HttpStatus.CONTENT_TOO_LARGE);
-            }
         }
 
         verificationTokenService.sendVerificationLink(user);
         userRepository.save(user);
 
-        return new ResponseEntity<>("Registration successful. Verification email sent. Check your inbox.", HttpStatus.CREATED);
+        return "Registration successful. Verification email sent. Check your inbox.";
     }
 
     @LogExecutionTime(value="Login user")
-    public ResponseEntity<String> login(UserLoginRequest request) {
+    public String login(UserLoginRequest request) {
 
         User user = userRepository.findByEmail(request.getEmail()).orElseThrow(() -> new AuthorizationException("Invalid credentials"));
 
@@ -103,32 +94,25 @@ public class UserService {
             throw new AuthorizationException("Invalid credentials");
         }
 
-        String token = tokenProvider.generateToken(user);
+        // String token = tokenProvider.generateToken(user);
 
         // String cookie = cookieService.issueToken(token);
 
         // activeUserService.incrementActiveUserCount();
 
-        return ResponseEntity.ok(token);
+        return tokenProvider.generateToken(user);
     }
 
     @LogExecutionTime(value = "Fetching all users in UserService class",doSave = false)
-    public ResponseEntity<Page<UserResponse>> findAll(int page, int size) {
+    public Page<UserResponse> findAll(int page, int size) {
 
-        try{
             Page<User> userPage = userRepository.findAll(PageRequest.of(page,size,Sort.by(Sort.Direction.DESC,"createdAt")));
 
-
-            Page<UserResponse> responsePage = userPage.map(userMapper::mapToResponse);
-
-            return ResponseEntity.ok(responsePage);
-        } catch (Exception e){
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+            return userPage.map(userMapper::mapToResponse);
     }
 
     @LogExecutionTime(value = "Fetching a user by id in UserService class",doSave = false)
-    public ResponseEntity<UserResponse> findById(long userId) {
+    public UserResponse findById(long userId) {
 
 //        UserCache cachedUser = userCacheService.get(email);
 //
@@ -139,18 +123,17 @@ public class UserService {
 
         User user = userRepository.findById(userId).orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
-        UserResponse response = userMapper.mapToResponse(user);
+//        UserResponse response = userMapper.mapToResponse(user);
 //        UserCache dto = toCacheDTO(user);
 //
 //        userCacheService.put(email,dto);
 
 //        UserResponse response = userMapper.mapToResponse(dto);
-        return ResponseEntity.ok(response);
+        return userMapper.mapToResponse(user);
     }
-    @LogExecutionTime(value="Updating user profile in UserService class",doSave = false)
-    public ResponseEntity<UserProfileResponse> updateProfile(ProfileRequest request,long userId) {
 
-        try{
+    @LogExecutionTime(value="Updating user profile in UserService class",doSave = false)
+    public UserProfileResponse updateProfile(ProfileRequest request,long userId) {
             User user = userRepository.findById(userId).orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
             if (request.getName() != null) user.setName(request.getName());
@@ -164,15 +147,13 @@ public class UserService {
 
             // userCacheService.evict(user.getEmail());
 
-            return ResponseEntity.ok(userMapper.mapToProfileResponse(saved));
-        } catch (Exception e){
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+            return userMapper.mapToProfileResponse(saved);
+
     }
 
     @LogExecutionTime(value="Updating user role in UserService class",doSave = false)
     public void upgradeMemberRole(String email){
-        try{
+
             User existingUser = userRepository.findByEmail(email).orElseThrow(() -> new ResourceNotFoundException("User not found"));
             Set<Role> tempRoles = new HashSet<>();
             if(existingUser.getRoles().contains(Role.YOUTH_LEADER) && existingUser.getRoles().size() == 1){
@@ -202,14 +183,10 @@ public class UserService {
             roles.add(nextRole);
             existingUser.setRoles(roles);
 
-        } catch (Exception e){
-            e.printStackTrace();
-        }
     }
 
     @LogExecutionTime("Updating user role in UserService class")
     public void downgradeMemberRole(String email){
-        try{
             User existingUser = userRepository.findByEmail(email).orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
             if(existingUser.getRoles().isEmpty()){
@@ -227,54 +204,42 @@ public class UserService {
 
             existingUser.setRoles(roles);
 
-        } catch (Exception e){
-            e.printStackTrace();
-        }
     }
 
 
 
     @LogExecutionTime(value = "Hard Delete in UserService class",doSave = false)
-    public ResponseEntity<String> deleteAccount(long userId){
+    public String deleteAccount(long userId){
 
         User user = userRepository.findById(userId).orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         userRepository.delete(user);
 
-        return ResponseEntity.ok("User was removed successfully");
+        return "User was removed successfully";
         // long time = jwtTokenProvider.getRemainingSessionTimeInSeconds(token);
         // long hours = time / 60;
-        // return ResponseEntity.ok("Successfully deactivated your account time remaining from session: " + hours + " hrs remaining");
+        // return "Successfully deactivated your account time remaining from session: " + hours + " hrs remaining";
     }
 
     @LogExecutionTime(value = "Soft Delete in UserService class",doSave = false)
-    public ResponseEntity<?> deactivateMember(String email){
-
-        try{
+    public String deactivateMember(String email){
             User user = userRepository.findByEmail(email).orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
             user.setEnabled(false);
             userRepository.save(user);
 
-            return ResponseEntity.ok("User was deactivated successfully");
-        } catch (Exception e){
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+            return "User was deactivated successfully";
     }
 
     @LogExecutionTime(value = "Activate in UserService class",doSave = false)
-    public ResponseEntity<?> activateMember(String email){
+    public String activateMember(String email){
 
-        try{
             User user = userRepository.findByEmail(email).orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
             user.setEnabled(true);
             userRepository.save(user);
 
-            return ResponseEntity.ok("User was activated successfully");
-        } catch (Exception e){
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+            return "User was activated successfully";
     }
 
     @Transactional
@@ -409,6 +374,7 @@ public class UserService {
     public void resetPassword(long userId, PasswordResetRequest request) {
 
         User existingUser;
+
         if(userId == 0L){
             existingUser = userRepository.findById(userId).orElseThrow(() -> new ResourceNotFoundException("User doesn't exist"));
 
@@ -419,7 +385,9 @@ public class UserService {
         if(existingUser.getAuthProvider().equals(AuthProvider.OAUTH2)){
             throw new PasswordResetException("Cannot change password for a OAuth based user");
         }
+
         existingUser.setPassword(passwordEncoder.encode(request.getPassword()));
+
         userRepository.save(existingUser);
     }
 

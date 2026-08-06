@@ -1,7 +1,6 @@
 package com.tyler.YouthEngedi.controllers;
 
 import com.tyler.YouthEngedi.Exceptions.*;
-import com.tyler.YouthEngedi.Repository.UserRepository;
 import com.tyler.YouthEngedi.Repository.VerificationTokenRepository;
 import com.tyler.YouthEngedi.models.PasswordResetRequest;
 import com.tyler.YouthEngedi.models.User;
@@ -12,13 +11,12 @@ import com.tyler.YouthEngedi.models.dtos.UserLoginRequest;
 import com.tyler.YouthEngedi.models.dtos.UserRegisterRequest;
 import com.tyler.YouthEngedi.services.EmailService;
 import com.tyler.YouthEngedi.services.UserService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -28,6 +26,7 @@ import java.util.concurrent.CompletableFuture;
 @RestController
 @RequestMapping("/api/v1/auth")
 @RequiredArgsConstructor
+@Tag(name="Authentication Management",description = "Api for managing non-secure based endpoints")
 public class AuthenticationController {
 
     private final UserService userService;
@@ -35,7 +34,7 @@ public class AuthenticationController {
     private final VerificationTokenRepository verificationTokenRepository;
 
     @PostMapping(value="/register", consumes=MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<?> register(@ModelAttribute UserRegisterRequest request){
+    public ResponseEntity<String> register(@ModelAttribute UserRegisterRequest request){
         try{
 
             boolean valid = emailService.hasMXRecord(request.getEmail());
@@ -44,7 +43,7 @@ public class AuthenticationController {
                 throw new InvalidEmailException("Email doesn't exist");
             }
 
-            return userService.register(request);
+            return new ResponseEntity<>(userService.register(request), HttpStatus.CREATED);
 
         } catch (InvalidEmailException e){
             return new ResponseEntity<>("Email doesn't exist",HttpStatus.IM_USED);
@@ -62,7 +61,7 @@ public class AuthenticationController {
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody UserLoginRequest request){
         try{
-            return userService.login(request);
+            return ResponseEntity.ok(userService.login(request));
         } catch (InvalidEmailException e){
             return new ResponseEntity<>("Invalid email",HttpStatus.CONFLICT);
         } catch(AuthorizationException e){

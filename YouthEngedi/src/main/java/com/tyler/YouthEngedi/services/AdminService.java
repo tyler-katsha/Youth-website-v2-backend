@@ -22,53 +22,20 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class AdminService {
 
-    private final static Logger logger = LogManager.getLogger(AdminService.class);
-
     private final AuditRepository auditRepository;
     private final PerformanceRepository performanceRepository;
-    private final UserRepository userRepository;
     private final EmailService emailService;
 
-    public ResponseEntity<Page<AuditLog>> getSystemLogs(int page, int size){
-        return ResponseEntity.ok(auditRepository.findAll(PageRequest.of(page,size,Sort.by(Sort.Direction.DESC,"now"))));
+    public Page<AuditLog> getSystemLogs(int page, int size){
+        return auditRepository.findAll(PageRequest.of(page,size,Sort.by(Sort.Direction.DESC,"now")));
     }
 
-    public ResponseEntity<Page<Performance>> getSystemPerformanceData(int page, int size){
+    public Page<Performance> getSystemPerformanceData(int page, int size){
 
-        return ResponseEntity.ok(performanceRepository.findAll(PageRequest.of(page,size,Sort.by(Sort.Direction.DESC,"createdAt"))));
-    }
-
-    public boolean deactivateUser(String email) {
-
-        try{
-            User user = userRepository.findByEmail(email).orElseThrow(() -> new ResourceNotFoundException("User doesn't exist"));
-
-            user.setDeleted(true);
-
-            return true;
-        } catch (Exception e){
-            return false;
-        }
-    }
-
-    public boolean activateUser(String email) {
-
-        try {
-            User user = userRepository.findByEmail(email).orElseThrow(() -> new ResourceNotFoundException("User doesn't exist"));
-
-            user.setDeleted(false);
-
-            return true;
-        } catch (Exception e) {
-            return false;
-        }
+        return performanceRepository.findAll(PageRequest.of(page,size,Sort.by(Sort.Direction.DESC,"createdAt")));
     }
 
     public void sendTestEmail(String type) {
-        try{
-            emailService.sendTestEmail(type);
-        } catch (MessagingException e){
-            logger.error("Failed to send email to {}","me",e);
-        }
+        emailService.sendTestEmail(type);
     }
 }
