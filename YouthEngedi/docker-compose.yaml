@@ -42,7 +42,7 @@ services:
       - youth-network
 
   python:
-    build: ./python-api
+    build: ../python-api
     container_name: python-api
     env_file:
       - .env
