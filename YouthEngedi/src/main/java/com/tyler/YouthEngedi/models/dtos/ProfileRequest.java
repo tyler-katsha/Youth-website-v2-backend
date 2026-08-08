@@ -1,8 +1,5 @@
 package com.tyler.YouthEngedi.models.dtos;
 
-import com.tyler.YouthEngedi.models.enums.Role;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

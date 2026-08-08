@@ -18,6 +18,8 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.Principal;
+
 
 @RestController
 @RequestMapping("/api/v1")
@@ -30,7 +32,7 @@ public class UserController {
     @PreAuthorize("hasAnyRole('ADMIN','YOUTH_LEADER')")
     @GetMapping("/users")
     @Operation(summary = "Finds all the users with a certain amount of pages for each request",description = "Fetches all the users in the database")
-    @ApiResponse(responseCode="200",description="Users are found successfully.")
+    @ApiResponse(responseCode="200",description="Users was found successfully.")
     @ApiResponse(responseCode="404",description="An error was thrown maybe like a database offline.")
     @ApiResponse(responseCode="400",description="Users was not found in the database")
     @ApiResponse(responseCode="500",description="An generic exception was thrown and something went wrong")
@@ -70,7 +72,7 @@ public class UserController {
     @ApiResponse(responseCode = "500",description = "An error has occurred with the system")
     public ResponseEntity<?> updateProfile(@ModelAttribute ProfileRequest request, @AuthenticationPrincipal UserPrincipal principal){
         try{
-            return userService.updateProfile(request,principal.getUserId());
+            return ResponseEntity.ok(userService.updateProfile(request,principal.getUserId()));
         } catch (ResourceNotFoundException e){
             return new ResponseEntity<>(new ApiResult(false,e.getMessage()),HttpStatus.NOT_FOUND);
         } catch (Exception e){
@@ -85,9 +87,7 @@ public class UserController {
     @ApiResponse(responseCode = "400",description = "An error has occurred with the system")
     public ResponseEntity<?> upgradeMemberRole(@PathVariable String email){
         try{
-            userService.upgradeMemberRole(email);
-
-            return new ResponseEntity<>(new ApiResult(true,"Upgraded user"),HttpStatus.OK);
+            return new ResponseEntity<>(userService.upgradeMemberRole(email),HttpStatus.OK);
         } catch (ResourceNotFoundException e){
             return new ResponseEntity<>(new ApiResult(false,e.getMessage()),HttpStatus.NOT_FOUND);
         } catch (Exception e){
@@ -102,8 +102,7 @@ public class UserController {
     @ApiResponse(responseCode = "400",description = "An error has occurred with the system")
     public ResponseEntity<?> downgradeMemberRole(@PathVariable String email){
         try{
-            userService.downgradeMemberRole(email);
-            return new ResponseEntity<>(new ApiResult(true,"Downgraded user"),HttpStatus.OK);
+            return new ResponseEntity<>(userService.downgradeMemberRole(email),HttpStatus.OK);
         } catch (ResourceNotFoundException e){
             return new ResponseEntity<>(new ApiResult(false,e.getMessage()),HttpStatus.NOT_FOUND);
         } catch (Exception e){
@@ -137,6 +136,7 @@ public class UserController {
     @PreAuthorize("hasAnyRole('ADMIN','YOUTH_LEADER','MEMBER')")
     @PutMapping("/users/{email}/deactivate")
     @Operation(summary = "Uses the user-id to soft delete the user",description = "This disables the user account")
+    @ApiResponse(responseCode = "200",description = "User account was successfully disabled.")
     @ApiResponse(responseCode = "404",description = "User was not found based with there user-id")
     @ApiResponse(responseCode = "400",description = "An error has occurred with the system")
     public ResponseEntity<ApiResult> deactivateMember(@PathVariable String email){
@@ -151,6 +151,10 @@ public class UserController {
 
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/users/{email}/activate")
+    @ApiResponse(responseCode = "200",description = "User account was successfully enabled.")
+    @Operation(summary = "Uses the user-id to soft delete the user",description = "This disables the user account")
+    @ApiResponse(responseCode = "404",description = "User was not found based with there user-id")
+    @ApiResponse(responseCode = "400",description = "An error has occurred with the system")
     public ResponseEntity<ApiResult> activateMember(@PathVariable String email){
         try{
             return ResponseEntity.ok(new ApiResult(true,userService.activateMember(email)));

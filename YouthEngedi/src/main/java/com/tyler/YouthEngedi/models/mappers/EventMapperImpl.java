@@ -2,7 +2,9 @@ package com.tyler.YouthEngedi.models.mappers;
 
 import com.tyler.YouthEngedi.models.Event;
 import com.tyler.YouthEngedi.models.dtos.EventResponse;
+import org.springframework.stereotype.Component;
 
+@Component
 public class EventMapperImpl implements EventMapper{
     @Override
     public EventResponse mapToEventResponse(Event event) {

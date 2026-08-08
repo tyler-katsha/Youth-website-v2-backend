@@ -20,6 +20,5 @@ public class UserCache {
     private String bio;
     private String profileImageUrl;
     private Set<Role> roles;
-    private Boolean isDeleted;
-    private Boolean isOnline;
+    private boolean isDeleted;
 }

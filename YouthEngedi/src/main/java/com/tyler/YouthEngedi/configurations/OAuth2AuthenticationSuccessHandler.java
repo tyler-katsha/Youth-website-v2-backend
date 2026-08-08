@@ -34,10 +34,10 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
 
     @Autowired
     private UserRepository userRepository;
-    @Autowired
-    private CookieService cookieService;
-    @Autowired
-    private VerificationTokenService verificationTokenService;
+//    @Autowired
+//    private CookieService cookieService;
+//    @Autowired
+//    private VerificationTokenService verificationTokenService;
 
     @Override
     @LogExecutionTime(value = "Calling onAuthenticationSuccess() in OAuth2AuthenticationSuccessHandler class",doSave = false)
@@ -45,49 +45,48 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
 
         OAuth2User oAuth2User = (OAuth2User) authentication.getPrincipal();
 
-        if (oAuth2User == null) {
-            handleExceptionRedirect(request, response, "authentication_failed");
-            return;
-        }
-
-        // Extract attributes safely
         String email = oAuth2User.getAttribute("email");
-        String dateOfBirth = oAuth2User.getAttribute("birthdate");
-        String profileImageUrl = oAuth2User.getAttribute("picture");
-        String name = oAuth2User.getAttribute("name");
 
-        if (email == null) {
-            handleExceptionRedirect(request, response, "email_not_found_from_provider");
+        if (email == null || email.isBlank()) {
+            handleExceptionRedirect(request, response, "oauth_cancelled");
             return;
         }
 
-        Optional<User> oAuthToUser = userRepository.findByEmail(email);
+        String name = oAuth2User.getAttribute("name");
+        String profileImageUrl = oAuth2User.getAttribute("picture");
+        String dateOfBirth = oAuth2User.getAttribute("birthdate"); // May be null for Google
 
-        User user;
+        User user = userRepository.findByEmail(email)
+                .map(existingUser -> {
 
-        if (oAuthToUser.isPresent()) {
-            user = oAuthToUser.get();
-            user.setName(name);
+                    if (name != null && !name.isBlank()) {
+                        existingUser.setName(name);
+                    }
 
-            user.setDateOfBirth(dateOfBirth);
-            user.setProfileImageUrl(profileImageUrl);
-            user.setEmail(user.getEmail());
-            user.setEnabled(true);
-            user = userRepository.save(user);
+                    if (profileImageUrl != null && !profileImageUrl.isBlank()) {
+                        existingUser.setProfileImageUrl(profileImageUrl);
+                    }
 
-        } else {
-            User newUser = User.builder()
-                    .email(email)
-                    .dateOfBirth(dateOfBirth)
-                    .createdAt(LocalDateTime.now())
-                    .profileImageUrl(profileImageUrl)
-                    .authProvider(AuthProvider.OAUTH2)
-                    .enabled(true)
-                    .name(name)
-                    .build();
+                    if (dateOfBirth != null && !dateOfBirth.isBlank()) {
+                        existingUser.setDateOfBirth(dateOfBirth);
+                    }
 
-            user = userRepository.save(newUser);
-        }
+                    existingUser.setEnabled(true);
+
+                    return userRepository.save(existingUser);
+                })
+                .orElseGet(() -> userRepository.save(
+                        User.builder()
+                                .email(email)
+                                .name(name)
+                                .profileImageUrl(profileImageUrl)
+                                .dateOfBirth(dateOfBirth)
+                                .authProvider(AuthProvider.OAUTH2)
+                                .enabled(true)
+                                .createdAt(LocalDateTime.now())
+                                .build()
+                ));
+
 
         issueTokenAndRedirect(request, response, user);
     }

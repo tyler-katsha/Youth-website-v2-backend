@@ -1,6 +1,7 @@
 package com.tyler.YouthEngedi.configurations;
 
 import com.tyler.YouthEngedi.filters.JwtAuthenticationFilter;
+import com.tyler.YouthEngedi.models.enums.Role;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -12,6 +13,11 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
@@ -20,6 +26,7 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.List;
+import java.util.Set;
 
 @Configuration
 @EnableMethodSecurity
@@ -43,7 +50,7 @@ public class SecurityConfiguration {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS).sessionFixation().none())
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers("/api/v1/auth/**","/oauth2/**","/","/error","/api/v1/email/**","/api/v1/health")
+                        .requestMatchers("/api/v1/auth/**","/oauth2/**","/","/error","/api/v1/email/**","/api/v1/health","/my-docs/**","/my-docs","/api-definitions/**","/v3/api-docs/**","/swagger-ui/index.html","/swagger-ui/**","/api/v1/python/**")
                         .permitAll()
                         .anyRequest()
                         .authenticated())
@@ -71,5 +78,15 @@ public class SecurityConfiguration {
         source.registerCorsConfiguration("/**",configuration);
 
         return source;
+    }
+
+    @Bean
+    public UserDetailsService userDetailsService(){
+        UserDetails userDetails = User.withUsername("admin")
+                .password(new BCryptPasswordEncoder(12).encode("admin"))
+                .roles(String.valueOf(Role.MEMBER))
+                .build();
+
+        return new InMemoryUserDetailsManager(userDetails);
     }
 }

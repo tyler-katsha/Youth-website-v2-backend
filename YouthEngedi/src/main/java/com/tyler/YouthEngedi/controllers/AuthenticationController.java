@@ -4,20 +4,20 @@ import com.tyler.YouthEngedi.Exceptions.*;
 import com.tyler.YouthEngedi.Repository.VerificationTokenRepository;
 import com.tyler.YouthEngedi.models.PasswordResetRequest;
 import com.tyler.YouthEngedi.models.User;
-import com.tyler.YouthEngedi.models.UserPrincipal;
 import com.tyler.YouthEngedi.models.VerificationToken;
-import com.tyler.YouthEngedi.models.dtos.SocialLoginRequest;
 import com.tyler.YouthEngedi.models.dtos.UserLoginRequest;
 import com.tyler.YouthEngedi.models.dtos.UserRegisterRequest;
+import com.tyler.YouthEngedi.services.CookieService;
 import com.tyler.YouthEngedi.services.EmailService;
 import com.tyler.YouthEngedi.services.UserService;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
@@ -31,9 +31,11 @@ public class AuthenticationController {
 
     private final UserService userService;
     private final EmailService emailService;
+    private final CookieService cookieService;
     private final VerificationTokenRepository verificationTokenRepository;
 
     @PostMapping(value="/register", consumes=MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(summary = "Registers user to the system")
     public ResponseEntity<String> register(@ModelAttribute UserRegisterRequest request){
         try{
 
@@ -59,6 +61,7 @@ public class AuthenticationController {
     }
 
     @PostMapping("/login")
+    @Operation(summary = "Log user into the system")
     public ResponseEntity<?> login(@RequestBody UserLoginRequest request){
         try{
             return ResponseEntity.ok(userService.login(request));
@@ -75,21 +78,11 @@ public class AuthenticationController {
         }
     }
 
-    @PostMapping("/social")
-    public ResponseEntity<?> loginWithOAuth2(@RequestBody SocialLoginRequest request){
-        try{
-            return userService.loginWithOAuth2(request);
-        } catch (ResourceNotFoundException e){
-            return new ResponseEntity<>("Failed to login",HttpStatus.INTERNAL_SERVER_ERROR);
-        } catch (Exception e){
-            return new ResponseEntity<>("Something went wrong. Please try again",HttpStatus.BAD_REQUEST);
-        }
-    }
-
     @PostMapping("/continue-as-guest")
+    @Operation(summary = "Login as guest",description = "Creates a shorten version of a token to allow this type of user to access limited features")
     public ResponseEntity<?> continueAsGuest(){
         try{
-            return userService.continueAsGuest();
+            return ResponseEntity.ok(userService.continueAsGuest());
         } catch (ResourceNotFoundException e){
             return new ResponseEntity<>("Failed to continue as guest",HttpStatus.INTERNAL_SERVER_ERROR);
         } catch (Exception e){
@@ -97,9 +90,10 @@ public class AuthenticationController {
         }
     }
     @PostMapping("/logout")
+    @Operation(summary = "Log user out of system",description = "Destroys the Jwt-Token stored in that login period")
     public ResponseEntity<?> logout(HttpServletResponse response){
         try{
-            return userService.logout(response);
+            return ResponseEntity.ok(userService.logout(response));
         } catch (ResourceNotFoundException e){
             return new ResponseEntity<>("Failed to logout",HttpStatus.INTERNAL_SERVER_ERROR);
         } catch (Exception e){
@@ -136,15 +130,21 @@ public class AuthenticationController {
     }
 
     @PostMapping("/forgot-password")
-    public ResponseEntity<String> resetPassword(@AuthenticationPrincipal UserPrincipal principal,@RequestBody PasswordResetRequest request){
+    public ResponseEntity<String> resetPassword(@RequestBody PasswordResetRequest request){
+
         try{
-            userService.resetPassword(principal.getUserId(),request);
-            return new ResponseEntity<>("Verify sent to inbox",HttpStatus.OK);
+
+            userService.resetPassword(request);
+
+            return new ResponseEntity<>("Password reset successfully.",HttpStatus.OK);
         } catch(PasswordResetException e){
             return new ResponseEntity<>(e.getMessage(),HttpStatus.NOT_ACCEPTABLE);
         } catch (ResourceNotFoundException e){
             return new ResponseEntity<>("Failed to verify user",HttpStatus.INTERNAL_SERVER_ERROR);
+        } catch(ExpiredJwtException e){
+            return new ResponseEntity<>("Session is expired",HttpStatus.SERVICE_UNAVAILABLE);
         } catch (Exception e){
+            e.printStackTrace();
             return new ResponseEntity<>("Something went wrong. Please try again",HttpStatus.BAD_REQUEST);
         }
     }

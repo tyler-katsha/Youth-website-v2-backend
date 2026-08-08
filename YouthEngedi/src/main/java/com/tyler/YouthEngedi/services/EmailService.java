@@ -1,9 +1,10 @@
 package com.tyler.YouthEngedi.services;
 
+import com.resend.*;
+import com.resend.core.exception.ResendException;
+import com.resend.services.emails.model.CreateEmailOptions;
 import com.tyler.YouthEngedi.Exceptions.InvalidEmailException;
 import com.tyler.YouthEngedi.Repository.ContactSubmissionRepository;
-import com.tyler.YouthEngedi.annotations.AuditAction;
-import com.tyler.YouthEngedi.annotations.LogExecutionTime;
 import com.tyler.YouthEngedi.models.*;
 import com.tyler.YouthEngedi.models.dtos.EmailRequest;
 import com.tyler.YouthEngedi.models.enums.AuthProvider;
@@ -11,16 +12,9 @@ import com.tyler.YouthEngedi.models.enums.EventType;
 import com.tyler.YouthEngedi.models.enums.RequestStatus;
 import com.tyler.YouthEngedi.models.enums.Role;
 import com.tyler.YouthEngedi.utils.HtmlTemplate;
+import jakarta.annotation.PostConstruct;
 import jakarta.mail.MessagingException;
-import jakarta.mail.internet.MimeMessage;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
@@ -31,9 +25,6 @@ import org.xbill.DNS.Record;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
@@ -41,12 +32,12 @@ import static com.tyler.YouthEngedi.constants.UrlConstants.*;
 import static com.tyler.YouthEngedi.services.CookieService.production;
 
 @Service
-@RequiredArgsConstructor
 public class EmailService {
 
-    private final ContactSubmissionRepository contactSubmissionRepository;
-    private final JavaMailSender mailSender;
-    private final RestClient restClient;
+    private final static String noReplyEmail = "noreply@gmail.com";
+    private final static String supportEmail = "support@gmail.com";
+    private final static String onboardingEmail = "onboarding@resend.dev";
+
 
     @Value("${spring.mail.username}")
     private String developerEmail;
@@ -55,38 +46,48 @@ public class EmailService {
     @Value("${resend.api.key}")
     private String resendKey;
 
-    private final static String noReplyEmail = "noreply@youthengedi.co.za";
-    private final static String supportEmail = "support@youthengedi.co.za";
+    private final ContactSubmissionRepository contactSubmissionRepository;
+    private Resend resend;
 
+    public EmailService(ContactSubmissionRepository contactSubmissionRepository,RestClient.Builder builder){
+        this.contactSubmissionRepository = contactSubmissionRepository;
+    }
+
+    @PostConstruct
+    public void init(){
+        resend = new Resend(resendKey);
+    }
     public void sendEmail(EmailRequest request) {
-        final Map<String,Object> body = new HashMap<>();
+        String subject = String.format("New Contact Message from %s", request.getName());
+        String emailBody = HtmlTemplate.basicEmailRequest(request.getName(),request.getEmail(),request.getMessage());
 
-            String subject = String.format("New Contact Message from %s", request.getName());
-
-            String emailBody = HtmlTemplate.basicEmailRequest(request.getName(),request.getEmail(),request.getMessage());
-
-            body.put("from",request.getEmail());
-            body.put("to", List.of(request.getEmail()));
-            body.put("subject",subject);
-            body.put("body",emailBody);
-
-
-            ContactSubmission contactSubmission = ContactSubmission.builder()
+        ContactSubmission contactSubmission = ContactSubmission.builder()
                     .senderEmail(request.getEmail())
                     .senderName(request.getName())
                     .message(request.getMessage())
                     .submittedAt(LocalDateTime.now())
                     .build();
 
-            contactSubmissionRepository.save(contactSubmission);
+        contactSubmissionRepository.save(contactSubmission);
 
-        callRenderAPI(body);
+        try{
+            CreateEmailOptions createEmailOptions = CreateEmailOptions.builder()
+                    .subject(subject)
+                    .addReplyTo(request.getEmail())
+                    .from(onboardingEmail)
+                    .to(developerEmail)
+                    .html(emailBody)
+                    .build();
+
+            resend.emails().send(createEmailOptions);
+        } catch (ResendException e){
+            e.printStackTrace();
+        }
+
     }
 
     @Async
     public void sendEmail(PasswordResetRequest request) throws MessagingException {
-
-        final Map<String,Object> body = new HashMap<>();
 
         String subject = "Password Reset Request - Youth Management System";
 
@@ -95,37 +96,40 @@ public class EmailService {
 
         String finalHtmlBody = HtmlTemplate.emailHtml(homeUrl,resetUrl);
 
+        try{
+            CreateEmailOptions createEmailOptions = CreateEmailOptions.builder()
+                    .subject(subject)
+                    .addReplyTo(developerEmail)
+                    .from(onboardingEmail)
+                    .to(request.getEmail())
+                    .html(finalHtmlBody)
+                    .build();
 
-        body.put("from",request.getEmail());
-        body.put("to",List.of(noReplyEmail));
-        body.put("subject",subject);
-        body.put("body",finalHtmlBody);
+            resend.emails().send(createEmailOptions);
+        } catch (ResendException e){
+            e.printStackTrace();
+        }
 
-        callRenderAPI(body);
     }
 
     public void sendEmail(String emailBody,String subject) {
+        try{
+            CreateEmailOptions createEmailOptions = CreateEmailOptions.builder()
+                    .subject(subject)
+                    .addReplyTo(developerEmail)
+                    .from(onboardingEmail)
+                    .to(developerEmail)
+                    .html(emailBody)
+                    .build();
 
-        final Map<String,Object> body = new HashMap<>();
-
-        body.put("from",developerEmail);
-        body.put("to", List.of(developerEmail));
-        body.put("subject",subject);
-        body.put("body",emailBody);
-
-        callRenderAPI(body);
+            resend.emails().send(createEmailOptions);
+        } catch (ResendException e){
+            e.printStackTrace();
+        }
     }
 
     public void sendEmail(String email,String subject, String msg) {
 
-        final Map<String,Object> body = new HashMap<>();
-
-        body.put("from",email);
-        body.put("to", List.of(adminEmail));
-        body.put("subject",subject);
-        body.put("replyTo",email);
-        body.put("body",msg);
-
         ContactSubmission contactSubmission = ContactSubmission.builder()
                     .subject(subject)
                     .senderEmail(email)
@@ -135,20 +139,23 @@ public class EmailService {
 
         contactSubmissionRepository.save(contactSubmission);
 
-        callRenderAPI(body);
+        try{
+            CreateEmailOptions createEmailOptions = CreateEmailOptions.builder()
+                    .subject(subject)
+                    .addReplyTo(developerEmail)
+                    .from(onboardingEmail)
+                    .to(email)
+                    .html(msg)
+                    .build();
 
+            resend.emails().send(createEmailOptions);
+        } catch (ResendException e){
+            e.printStackTrace();
+        }
     }
 
     public void sendEmail(String aEmail, String email,String subject, String msg) {
 
-        final Map<String,Object> body = new HashMap<>();
-
-        body.put("from",email);
-        body.put("to", List.of(aEmail));
-        body.put("subject",subject);
-        body.put("replyTo",email);
-        body.put("body",msg);
-
         ContactSubmission contactSubmission = ContactSubmission.builder()
                     .subject(subject)
                     .senderEmail(email)
@@ -158,7 +165,20 @@ public class EmailService {
 
         contactSubmissionRepository.save(contactSubmission);
 
-        callRenderAPI(body);
+        try{
+            CreateEmailOptions createEmailOptions = CreateEmailOptions.builder()
+                    .subject(subject)
+                    .addReplyTo(developerEmail)
+                    .from(onboardingEmail)
+                    .to(email)
+                    .html(msg)
+                    .build();
+
+            resend.emails().send(createEmailOptions);
+        } catch (ResendException e){
+            e.printStackTrace();
+        }
+
     }
 
     public void sendApprovedRequest(User admin, User user,RoleRequest request) {
@@ -199,20 +219,24 @@ public class EmailService {
 
     @Async
     public void sendVerificationEmail(String email, String token) {
-
-        final Map<String,Object> body = new HashMap<>();
-
         String link = String.format(production ? FRONTEND_VERIFICATION_PROD : FRONTEND_VERIFICATION_DEV,token,email);
 
         String subject = "Verify Your Youth Engedi Account";
-        String bodyHtml = HtmlTemplate.verificationEmailHtml(link);
+        String finalHtmlBody = HtmlTemplate.verificationEmailHtml(link);
 
-        body.put("from",email);
-        body.put("to",noReplyEmail);
-        body.put("subject",subject);
-        body.put("body",bodyHtml);
+        try{
+            CreateEmailOptions createEmailOptions = CreateEmailOptions.builder()
+                    .subject(subject)
+                    .addReplyTo(developerEmail)
+                    .from(onboardingEmail)
+                    .to(email)
+                    .html(finalHtmlBody)
+                    .build();
 
-        callRenderAPI(body);
+            resend.emails().send(createEmailOptions);
+        } catch (ResendException e){
+            System.out.println(e);
+        }
     }
 
     public void sendTestEmail(String type) {
@@ -231,7 +255,8 @@ public class EmailService {
 
         User u = User.builder()
                 .id(-999L)
-                .name("Bob").email(adminEmail)
+                .name("Bob")
+                .email(adminEmail)
                 .authProvider(AuthProvider.OAUTH2)
                 .roles(Set.of(Role.MEMBER))
                 .enabled(true)
@@ -246,9 +271,10 @@ public class EmailService {
                 .reviewAt(LocalDateTime.MIN)
                 .adminComment("Hello,\n\nThis is a test message generated by the Youth Engedi Management System to verify email formatting, styling, and delivery.\n\nNo action is required. If you received this email, the email service is functioning correctly.\n\nKind regards,\nYouth Engedi Management System")
                 .userReason("Hello,\n\nThis is a test message generated by the Youth Engedi Management System to verify email formatting, styling, and delivery.\n\nNo action is required. If you received this email, the email service is functioning correctly.\n\nKind regards,\nYouth Engedi Management System")
-                .wasReviewed(false)
-                .user(null)
-                .reviewedBy(null).build();
+                .wasReviewed(true)
+                .user(u)
+                .reviewedBy(admin)
+                .build();
 
         Event event = Event.builder()
                 .eventId(-999L)
@@ -262,11 +288,11 @@ public class EmailService {
 
         EmailRequest emailRequest = EmailRequest.builder()
                 .name("System")
-                .email(adminEmail).subject("System Test")
-                .message("Hello,\\n\\nThis is a test message generated by the Youth Engedi Management System to verify email formatting, styling, and delivery.\\n\\nNo action is required. If you received this email, the email service is functioning correctly.\\n\\nKind regards,\\nYouth Engedi Management System")
+                .email(developerEmail).subject("System Test")
+                .message("Hello,\n\nThis is a test message generated by the Youth Engedi Management System to verify email formatting, styling, and delivery.\n\nNo action is required. If you received this email, the email service is functioning correctly.\n\nKind regards,\nYouth Engedi Management System")
                 .build();
             switch(type){
-                case "verify" -> sendVerificationEmail(adminEmail,testToken);
+                case "verify" -> sendVerificationEmail(developerEmail,testToken);
                 case "role-submitted" -> testRequestUpgrade(u);
                 case "role-request" -> testRoleRequest(request);
                 case "role-approved" -> sendApprovedRequest(admin,u,request);
@@ -334,19 +360,23 @@ public class EmailService {
     }
     private void testContact(EmailRequest request){
 
-        final Map<String,Object> body = new HashMap<>();
-
         String subject = String.format("New Contact Message from %s", request.getName());
 
-        String emailBody = HtmlTemplate.contactSubmissionHtml(request.getName(),request.getEmail(),request.getMessage());
+        String finalHtmlBody = HtmlTemplate.contactSubmissionHtml(request.getName(),request.getEmail(),request.getMessage());
 
-        body.put("to",developerEmail);
-        body.put("from",adminEmail);
-        body.put("replyTo",request.getEmail());
-        body.put("subject",subject);
-        body.put("body",emailBody);
+        try{
+            CreateEmailOptions createEmailOptions = CreateEmailOptions.builder()
+                    .subject(subject)
+                    .addReplyTo(developerEmail)
+                    .from(onboardingEmail)
+                    .to(request.getEmail())
+                    .html(finalHtmlBody)
+                    .build();
 
-        callRenderAPI(body);
+            resend.emails().send(createEmailOptions);
+        } catch (ResendException e){
+            e.printStackTrace();
+        }
     }
 
     public boolean hasMXRecord(String email){
@@ -360,14 +390,5 @@ public class EmailService {
         } catch (InvalidEmailException | TextParseException e){
             return false;
         }
-    }
-
-    private void callRenderAPI(Map<String,Object> body){
-        restClient.post()
-                .uri("/emails")
-                .header("Authorization","Bearer " + resendKey)
-                .body(body)
-                .retrieve()
-                .toBodilessEntity();
     }
 }

@@ -1,7 +1,5 @@
 package com.tyler.YouthEngedi.jwts;
 
-import com.tyler.YouthEngedi.Exceptions.ResourceNotFoundException;
-import com.tyler.YouthEngedi.Repository.UserRepository;
 import com.tyler.YouthEngedi.models.User;
 import com.tyler.YouthEngedi.models.enums.Role;
 import io.jsonwebtoken.Claims;
@@ -9,11 +7,11 @@ import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
+import javax.crypto.SecretKey;
 import java.security.Key;
 import java.util.Date;
 import java.util.HashMap;
@@ -27,8 +25,6 @@ public class JwtTokenProvider {
     private String secretKey;
     @Value("${app.jwt.expiration-milliseconds}")
     private long jwtExpiration;
-    @Autowired
-    private UserRepository userRepository;
 
     public String generateToken(User user) {
 
@@ -38,28 +34,10 @@ public class JwtTokenProvider {
         claims.put("roles",user.getRoles());
 
         return Jwts.builder()
-                .setClaims(claims)
-                .setSubject(user.getEmail())
-                .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + jwtExpiration))
-                .signWith(getKey())
-                .compact();
-    }
-
-    public String generateToken(String email) {
-
-        User user = userRepository.findByEmail(email).orElseThrow(() -> new ResourceNotFoundException("User doesn't exist"));
-
-        Map<String,Object> claims = new HashMap<>();
-        claims.put("userId",user.getId());
-        claims.put("isDeleted",user.isDeleted());
-        claims.put("roles",user.getRoles());
-
-        return Jwts.builder()
-                .setClaims(claims)
-                .setSubject(email)
-                .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + jwtExpiration))
+                .claims(claims)
+                .subject(user.getEmail())
+                .issuedAt(new Date(System.currentTimeMillis()))
+                .expiration(new Date(System.currentTimeMillis() + jwtExpiration))
                 .signWith(getKey())
                 .compact();
     }
@@ -72,10 +50,10 @@ public class JwtTokenProvider {
         claims.put("roles",user.getRoles());
 
         return Jwts.builder()
-                .setClaims(claims)
-                .setSubject(user.getEmail())
-                .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + time))
+                .claims(claims)
+                .subject(user.getEmail())
+                .issuedAt(new Date(System.currentTimeMillis()))
+                .expiration(new Date(System.currentTimeMillis() + time))
                 .signWith(getKey())
                 .compact();
     }
@@ -106,11 +84,11 @@ public class JwtTokenProvider {
     }
 
     private Claims extractAllClaims(String token){
-        return Jwts.parserBuilder()
-                .setSigningKey(getKey())
+        return Jwts.parser()
+                .verifyWith((SecretKey) getKey())
                 .build()
-                .parseClaimsJws(token)
-                .getBody();
+                .parseSignedClaims(token)
+                .getPayload();
     }
 
     public boolean validateToken(String token, UserDetails userDetails) throws ExpiredJwtException {
@@ -134,9 +112,7 @@ public class JwtTokenProvider {
             long remainingTimeMillis = expiration.getTime() - System.currentTimeMillis();
 
             return Math.max(0, remainingTimeMillis/1000);
-        } catch(ExpiredJwtException e){
-            return 0;
-        } catch(Exception e){
+        }  catch(Exception e){
             return 0;
         }
     }

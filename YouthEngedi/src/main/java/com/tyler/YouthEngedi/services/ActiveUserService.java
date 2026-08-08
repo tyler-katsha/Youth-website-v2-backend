@@ -8,6 +8,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.time.Month;
 
 @Service
 @RequiredArgsConstructor
@@ -16,14 +17,15 @@ public class ActiveUserService {
     private final RedisTemplate<String, Object> redisTemplate;
     private final ActiveUserRepository activeUserRepository;
 
-    public static final String ACTIVE_USERS_KEY = "active:users:";
+    private static final String ACTIVE_USERS_KEY = "active_users:";
 
     public void persistDailyActiveUsers() {
-        LocalDate month = LocalDate.now().withDayOfMonth(1);
+        Month month = LocalDate.now().getMonth();
 
-        String redisKey = "active:users:" + LocalDate.now();
+        String redisKey = ACTIVE_USERS_KEY + LocalDate.now();
 
-        Long activeCount = redisTemplate.opsForSet().size(redisKey);
+        Long count = redisTemplate.opsForSet().size(redisKey);
+        int activeCount = count == null ? 0 : Math.toIntExact(count);
 
         ActiveUser record = activeUserRepository.findById(month)
                 .orElse(ActiveUser.builder()
@@ -31,7 +33,7 @@ public class ActiveUserService {
                         .activeTotal(0)
                         .build());
 
-        record.setActiveTotal(record.getActiveTotal() + (activeCount != null ? activeCount : 0));
+        record.setActiveTotal(record.getActiveTotal() + activeCount);
 
         activeUserRepository.save(record);
 
@@ -46,6 +48,6 @@ public class ActiveUserService {
     }
     public long getActiveUserCount() {
         Object value = redisTemplate.opsForValue().get(ACTIVE_USERS_KEY);
-        return value instanceof Number ? ((Number) value).longValue() : 0L;
+        return value instanceof Number ? ((Number) value).longValue() : 0;
     }
 }

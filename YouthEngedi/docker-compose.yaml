@@ -25,7 +25,10 @@ services:
     container_name: spring_backend
     restart: unless-stopped
     depends_on:
-      - db
+      db:
+        condition: service_healthy
+      python:
+        condition: service_started
     env_file:
       - .env
     environment:
@@ -37,8 +40,21 @@ services:
       - "8080:8080"
     networks:
       - youth-network
+
+  python:
+    build: ./python-api
+    container_name: python-api
+    env_file:
+      - .env
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    networks:
+      - youth-network
+
 networks:
   youth-network:
     driver: bridge
+
 volumes:
   mysql_data:

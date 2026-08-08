@@ -6,9 +6,9 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.data.annotation.CreatedDate;
 
-import java.time.LocalDate;
+import java.time.Month;
+
 
 @Entity
 @Data
@@ -18,6 +18,6 @@ import java.time.LocalDate;
 public class ActiveUser {
 
     @Id
-    private LocalDate month;
-    private long activeTotal;
+    private Month month;
+    private int activeTotal;
 }

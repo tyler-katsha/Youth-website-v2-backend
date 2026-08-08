@@ -1,5 +1,6 @@
 package com.tyler.YouthEngedi.services;
 
+import com.tyler.YouthEngedi.Exceptions.InvalidEmailException;
 import com.tyler.YouthEngedi.models.dtos.UserCache;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;

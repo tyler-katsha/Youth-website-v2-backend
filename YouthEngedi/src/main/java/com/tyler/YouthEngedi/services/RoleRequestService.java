@@ -28,7 +28,7 @@ import java.time.LocalDateTime;
 @Service
 @RequiredArgsConstructor
 public class RoleRequestService {
-    private final static Logger logger = LogManager.getLogger(RoleRequestService.class);
+
     private final RoleRequestRepository repository;
     private final EmailService emailService;
     private final UserRepository userRepository;

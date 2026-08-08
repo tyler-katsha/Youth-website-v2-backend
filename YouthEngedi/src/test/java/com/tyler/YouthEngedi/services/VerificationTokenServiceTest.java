@@ -1,5 +1,6 @@
 package com.tyler.YouthEngedi.services;
 
+import com.tyler.YouthEngedi.Exceptions.ResourceNotFoundException;
 import com.tyler.YouthEngedi.Repository.UserRepository;
 import com.tyler.YouthEngedi.Repository.VerificationTokenRepository;
 import com.tyler.YouthEngedi.models.User;
@@ -16,6 +17,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
@@ -92,12 +94,25 @@ class VerificationTokenServiceTest {
         @DisplayName("Should remove current verification entity and send a new email and create a new entity in the database")
         void shouldRemoveCurrentVerificationEntityAndSendANewEmailAndCreateANewEntityInTheDatabase() throws MessagingException {
 
+            when(userRepository.findByEmail(testUser.getEmail()))
+                    .thenReturn(Optional.of(testUser));
             verificationTokenService.resendVerification(testUser.getEmail());
 
             verify(verificationTokenRepository).deleteByUser(testUser);
             verify(verificationTokenRepository).save(any(VerificationToken.class));
 
             verify(emailService).sendVerificationEmail(eq(testUser.getEmail()),anyString());
+        }
+
+        @Test
+        @DisplayName("Should throw and resource not found exception and not send the verification tokenToAUser")
+        void shouldThrowAndResourceNotFoundExceptionAndNotSendTheVerificationTokenToAUser(){
+
+            testUser.setEmail(null);
+
+            assertThrowsExactly(IllegalArgumentException.class,() -> verificationTokenService.resendVerification(testUser.getEmail()));
+
+            verifyNoInteractions(emailService);
         }
 
     }

@@ -4,6 +4,7 @@ import com.tyler.YouthEngedi.Exceptions.ResourceNotFoundException;
 import com.tyler.YouthEngedi.models.dtos.AnnouncementDto;
 import com.tyler.YouthEngedi.models.dtos.ApiResult;
 import com.tyler.YouthEngedi.services.AnnouncementService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/v1")
 @RequiredArgsConstructor
+@Tag(name="Announcement Management",description = "Api fetching and managing announcements based features")
 public class AnnouncementController {
 
     private final AnnouncementService announcementService;

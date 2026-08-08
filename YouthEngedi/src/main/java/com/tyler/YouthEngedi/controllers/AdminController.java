@@ -5,6 +5,7 @@ import com.tyler.YouthEngedi.models.AuditLog;
 import com.tyler.YouthEngedi.models.Performance;
 import com.tyler.YouthEngedi.models.dtos.ApiResult;
 import com.tyler.YouthEngedi.services.AdminService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/admin")
+@Tag(name="Admin Management",description = "Api fetching and managing admin based features strictly")
 public class AdminController {
 
     private final AdminService adminService;
@@ -40,6 +42,7 @@ public class AdminController {
         } catch (ResourceNotFoundException e){
             return new ResponseEntity<>(new ApiResult(false,e.getMessage()),HttpStatus.NOT_FOUND);
         } catch (Exception e){
+            e.printStackTrace();
             return new ResponseEntity<>(new ApiResult(false,"Something went wrong. Please try again later."),HttpStatus.BAD_REQUEST);
         }
     }

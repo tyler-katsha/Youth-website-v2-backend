@@ -17,17 +17,17 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.*;
 
@@ -40,12 +40,11 @@ public class UserService {
 
     private final UserMapper userMapper;
     private final CloudinaryService cloudinaryService;
-    private final SocialLoginService socialLoginService;
 //    private final UserCacheService userCacheService;
-    private final VerificationTokenService verificationTokenService;
+//    private final VerificationTokenService verificationTokenService;
 //    private final ActiveUserService activeUserService;
 //    private final RedisTemplate<String,Object> redisTemplate;
-    private final JwtTokenProvider jwtTokenProvider;
+//    private final JwtTokenProvider jwtTokenProvider;
     private final CookieService cookieService;
 
     @Value("${app.jwt.expiration-milliseconds}")
@@ -59,7 +58,6 @@ public class UserService {
         Optional<User> existingUser = userRepository.findByEmail(request.getEmail());
 
         if(existingUser.isPresent()){
-
             return String.format("Existing user with email: %s already exists. Please use a different email.",request.getEmail());
         }
 
@@ -67,14 +65,14 @@ public class UserService {
 
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         user.setAuthProvider(AuthProvider.LOCAL);
-        user.setEnabled(false);
+        user.setEnabled(true);
 
         if(request.getProfileImageUrl() != null && !request.getProfileImageUrl().isEmpty()){
                 String imageUrl = cloudinaryService.upload(request.getProfileImageUrl());
                 user.setProfileImageUrl(imageUrl);
         }
 
-        verificationTokenService.sendVerificationLink(user);
+        // verificationTokenService.sendVerificationLink(user);
         userRepository.save(user);
 
         return "Registration successful. Verification email sent. Check your inbox.";
@@ -86,7 +84,7 @@ public class UserService {
         User user = userRepository.findByEmail(request.getEmail()).orElseThrow(() -> new AuthorizationException("Invalid credentials"));
 
         if(!user.isEnabled()){
-            verificationTokenService.sendVerificationLink(user);
+            // verificationTokenService.sendVerificationLink(user);
             throw new LockedAccountException("Account is Locked. Please continue as guest and contact an youth leader or admin or verify account before attempting to login.");
         }
 
@@ -106,9 +104,8 @@ public class UserService {
     @LogExecutionTime(value = "Fetching all users in UserService class",doSave = false)
     public Page<UserResponse> findAll(int page, int size) {
 
-            Page<User> userPage = userRepository.findAll(PageRequest.of(page,size,Sort.by(Sort.Direction.DESC,"createdAt")));
-
-            return userPage.map(userMapper::mapToResponse);
+            return userRepository.findAll(PageRequest.of(page,size,Sort.by(Sort.Direction.DESC,"createdAt")))
+                    .map(userMapper::mapToResponse);
     }
 
     @LogExecutionTime(value = "Fetching a user by id in UserService class",doSave = false)
@@ -152,30 +149,32 @@ public class UserService {
     }
 
     @LogExecutionTime(value="Updating user role in UserService class",doSave = false)
-    public void upgradeMemberRole(String email){
+    public UserResponse upgradeMemberRole(String email){
 
-            User existingUser = userRepository.findByEmail(email).orElseThrow(() -> new ResourceNotFoundException("User not found"));
-            Set<Role> tempRoles = new HashSet<>();
-            if(existingUser.getRoles().contains(Role.YOUTH_LEADER) && existingUser.getRoles().size() == 1){
+        User existingUser = userRepository.findByEmail(email).orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        Set<Role> tempRoles = new HashSet<>();
 
-                tempRoles.add(Role.MEMBER);
-                tempRoles.add(Role.YOUTH_LEADER);
+        if(existingUser.getRoles().contains(Role.YOUTH_LEADER) && existingUser.getRoles().size() == 1){
 
-                existingUser.setRoles(tempRoles);
-                return;
-            }
+            tempRoles.add(Role.MEMBER);
+            tempRoles.add(Role.YOUTH_LEADER);
 
-            if(existingUser.getRoles().contains(Role.ADMIN) && existingUser.getRoles().size() == 1){
-                tempRoles.add(Role.MEMBER);
-                tempRoles.add(Role.YOUTH_LEADER);
-                tempRoles.add(Role.ADMIN);
+            existingUser.setRoles(tempRoles);
+            return userMapper.mapToResponse(existingUser);
+        }
 
-                existingUser.setRoles(tempRoles);
-                return;
-            }
-            if(existingUser.getRoles().contains(Role.ADMIN)){
-                return;
-            }
+        if(existingUser.getRoles().contains(Role.ADMIN) && existingUser.getRoles().size() == 1){
+            tempRoles.add(Role.MEMBER);
+            tempRoles.add(Role.YOUTH_LEADER);
+            tempRoles.add(Role.ADMIN);
+
+            existingUser.setRoles(tempRoles);
+            return userMapper.mapToResponse(existingUser);
+        }
+
+        if(existingUser.getRoles().contains(Role.ADMIN)){
+            return userMapper.mapToResponse(existingUser);
+        }
 
             Role nextRole = getNextRole(existingUser.getRoles());
 
@@ -183,27 +182,42 @@ public class UserService {
             roles.add(nextRole);
             existingUser.setRoles(roles);
 
+        return userMapper.mapToResponse(existingUser);
     }
 
-    @LogExecutionTime("Updating user role in UserService class")
-    public void downgradeMemberRole(String email){
-            User existingUser = userRepository.findByEmail(email).orElseThrow(() -> new ResourceNotFoundException("User not found"));
+    @LogExecutionTime(value = "Updating user role in UserService class",doSave = false)
+    public UserResponse downgradeMemberRole(String email){
+        User existingUser = userRepository.findByEmail(email).orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
-            if(existingUser.getRoles().isEmpty()){
-                Set<Role> roles = new HashSet<>();
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-                roles.add(Role.MEMBER);
-                existingUser.setRoles(roles);
-                return;
+        String loggedInEmail = authentication.getName();
+
+        boolean selfDowngrade = loggedInEmail.equals(email);
+
+        if(selfDowngrade){
+            long adminCount = userRepository.countByRolesContains(Role.ADMIN);
+
+            if(adminCount <= 1){
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN,"You are the last administrator");
             }
-            if(existingUser.getRoles().size() == 1){
-                return;
-            }
+        }
+        if(existingUser.getRoles().isEmpty()){
+            Set<Role> roles = new HashSet<>();
 
-            Set<Role> roles = removeRoles(existingUser.getRoles());
-
+            roles.add(Role.MEMBER);
             existingUser.setRoles(roles);
+            return userMapper.mapToResponse(existingUser);
+        }
+        if(existingUser.getRoles().size() == 1){
+            return userMapper.mapToResponse(existingUser);
+        }
 
+        Set<Role> roles = removeRoles(existingUser.getRoles());
+
+        existingUser.setRoles(roles);
+
+        return userMapper.mapToResponse(existingUser);
     }
 
 
@@ -249,7 +263,7 @@ public class UserService {
     }
 
     @LogExecutionTime(value = "Logout User",doSave = false)
-    public ResponseEntity<?> logout(HttpServletResponse response) {
+    public String logout(HttpServletResponse response) {
 
         Cookie cookie = cookieService.resetToken();
 
@@ -257,24 +271,21 @@ public class UserService {
 
         // activeUserService.decrementActiveUserCount();
 
-        return ResponseEntity.ok("Logged out successfully");
-    }
-
-
-    public ResponseEntity<?> loginWithOAuth2(SocialLoginRequest request) {
-            return socialLoginService.socialLogin(request);
+        return "Logged out successfully";
     }
 
     @LogExecutionTime(value = "Continue as Guest")
-    public ResponseEntity<?> continueAsGuest() {
+    public String continueAsGuest() {
         String guestId = "guest_" + UUID.randomUUID();
 
-        User guestUser = User.builder().id(Long.MAX_VALUE).email(guestId).build();
-        String token = tokenProvider.generateToken(guestUser);
+        User guestUser = User.builder()
+                .id(Long.MAX_VALUE)
+                .email(guestId)
+                .build();
 
         // activeUserService.incrementActiveUserCount();
         //return ResponseEntity.ok().header(HttpHeaders.SET_COOKIE,cookieService.issueToken(token,maxAge/2)).body("Successfully continued as guest");
-        return ResponseEntity.ok(token);
+        return tokenProvider.generateToken(guestUser);
     }
 
 //    public Set<String> findActiveUsers() {
@@ -371,16 +382,11 @@ public class UserService {
         return newSet;
     }
 
-    public void resetPassword(long userId, PasswordResetRequest request) {
+    public void resetPassword(PasswordResetRequest request) {
 
-        User existingUser;
+        User existingUser = userRepository.findByEmail(request.getEmail()).orElseThrow(() -> new ResourceNotFoundException("User doesn't exist"));
 
-        if(userId == 0L){
-            existingUser = userRepository.findById(userId).orElseThrow(() -> new ResourceNotFoundException("User doesn't exist"));
-
-        } else{
-            existingUser = userRepository.findByEmail(request.getEmail()).orElseThrow(() -> new ResourceNotFoundException("User doesn't exist"));
-        }
+        if(existingUser.getAuthProvider() == null) existingUser.setAuthProvider(AuthProvider.LOCAL);
 
         if(existingUser.getAuthProvider().equals(AuthProvider.OAUTH2)){
             throw new PasswordResetException("Cannot change password for a OAuth based user");
