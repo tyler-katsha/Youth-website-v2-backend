@@ -4,7 +4,6 @@ import com.tyler.YouthEngedi.models.dtos.PredictionRequest;
 import com.tyler.YouthEngedi.models.dtos.PredictionResponse;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import static com.tyler.YouthEngedi.constants.UrlConstants.*;
