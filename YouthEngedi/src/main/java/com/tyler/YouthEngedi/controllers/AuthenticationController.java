@@ -5,6 +5,7 @@ import com.tyler.YouthEngedi.Repository.VerificationTokenRepository;
 import com.tyler.YouthEngedi.models.PasswordResetRequest;
 import com.tyler.YouthEngedi.models.User;
 import com.tyler.YouthEngedi.models.VerificationToken;
+import com.tyler.YouthEngedi.models.dtos.ApiResult;
 import com.tyler.YouthEngedi.models.dtos.UserLoginRequest;
 import com.tyler.YouthEngedi.models.dtos.UserRegisterRequest;
 import com.tyler.YouthEngedi.services.CookieService;
@@ -12,6 +13,7 @@ import com.tyler.YouthEngedi.services.EmailService;
 import com.tyler.YouthEngedi.services.UserService;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -31,12 +33,12 @@ public class AuthenticationController {
 
     private final UserService userService;
     private final EmailService emailService;
-    private final CookieService cookieService;
+//    private final CookieService cookieService;
     private final VerificationTokenRepository verificationTokenRepository;
 
     @PostMapping(value="/register", consumes=MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "Registers user to the system")
-    public ResponseEntity<String> register(@ModelAttribute UserRegisterRequest request){
+    public ResponseEntity<ApiResult> register(@ModelAttribute UserRegisterRequest request){
         try{
 
             boolean valid = emailService.hasMXRecord(request.getEmail());
@@ -45,18 +47,18 @@ public class AuthenticationController {
                 throw new InvalidEmailException("Email doesn't exist");
             }
 
-            return new ResponseEntity<>(userService.register(request), HttpStatus.CREATED);
+            return new ResponseEntity<>(new ApiResult(true,userService.register(request)), HttpStatus.CREATED);
 
         } catch (InvalidEmailException e){
-            return new ResponseEntity<>("Email doesn't exist",HttpStatus.IM_USED);
-        } catch (ResourceNotFoundException e){
-            return new ResponseEntity<>("Resource not found",HttpStatus.NOT_FOUND);
-        } catch (ImageException e){
-            return new ResponseEntity<>("Image too big",HttpStatus.CONTENT_TOO_LARGE);
+            return new ResponseEntity<>(new ApiResult(false,"Email domain doesn't exist"),HttpStatus.IM_USED);
         } catch (AuthorizationException e){
-            return new ResponseEntity<>("Email already exist",HttpStatus.CONFLICT);
-        } catch (Exception e){
-            return new ResponseEntity<>("Something went wrong. Please try again",HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new ApiResult(false,e.getMessage()),HttpStatus.CONFLICT);
+        } catch (ResourceNotFoundException e){
+            return new ResponseEntity<>(new ApiResult(false,"Resource not found"),HttpStatus.NOT_FOUND);
+        } catch (ImageException e){
+            return new ResponseEntity<>(new ApiResult(false,"Image too big"),HttpStatus.CONTENT_TOO_LARGE);
+        }  catch (Exception e){
+            return new ResponseEntity<>(new ApiResult(false,"Something went wrong. Please try again"),HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -130,12 +132,11 @@ public class AuthenticationController {
     }
 
     @PostMapping("/forgot-password")
+    @Operation(summary = "")
+    @ApiResponse(responseCode = "200",description = "")
     public ResponseEntity<String> resetPassword(@RequestBody PasswordResetRequest request){
-
         try{
-
             userService.resetPassword(request);
-
             return new ResponseEntity<>("Password reset successfully.",HttpStatus.OK);
         } catch(PasswordResetException e){
             return new ResponseEntity<>(e.getMessage(),HttpStatus.NOT_ACCEPTABLE);
@@ -144,7 +145,6 @@ public class AuthenticationController {
         } catch(ExpiredJwtException e){
             return new ResponseEntity<>("Session is expired",HttpStatus.SERVICE_UNAVAILABLE);
         } catch (Exception e){
-            e.printStackTrace();
             return new ResponseEntity<>("Something went wrong. Please try again",HttpStatus.BAD_REQUEST);
         }
     }

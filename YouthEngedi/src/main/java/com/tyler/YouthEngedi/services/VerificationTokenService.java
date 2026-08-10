@@ -19,13 +19,15 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 @Service
-@RequiredArgsConstructor
 public class VerificationTokenService {
 
     private final VerificationTokenRepository verificationTokenRepository;
     private final UserRepository userRepository;
-    private final EmailService emailService;
 
+    public VerificationTokenService(VerificationTokenRepository verificationTokenRepository,UserRepository userRepository){
+        this.verificationTokenRepository = verificationTokenRepository;
+        this.userRepository = userRepository;
+    }
     @Transactional
     public void sendVerificationLink(User user){
 
@@ -46,7 +48,7 @@ public class VerificationTokenService {
 
         verificationTokenRepository.save(verificationToken);
 
-        sendTokenEmail(user.getEmail(),token);
+//        sendTokenEmail(user.getEmail(),token);
     }
 
     @Transactional
@@ -71,15 +73,15 @@ public class VerificationTokenService {
 
         verificationTokenRepository.save(verificationToken);
 
-        sendTokenEmail(email,token);
+//        sendTokenEmail(email,token);
     }
 
 
-    @Async
-    public void sendTokenEmail(final String email,final String token){
-        CompletableFuture.runAsync(() -> {
-            emailService.sendVerificationEmail(email,token);
-        });
-    }
+//    @Async
+//    public void sendTokenEmail(final String email,final String token){
+//        CompletableFuture.runAsync(() -> {
+//            emailService.sendVerificationEmail(email,token);
+//        });
+//    }
 }
 

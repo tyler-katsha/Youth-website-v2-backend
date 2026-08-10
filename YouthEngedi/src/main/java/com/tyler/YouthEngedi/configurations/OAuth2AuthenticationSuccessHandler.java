@@ -5,6 +5,7 @@ import com.tyler.YouthEngedi.annotations.LogExecutionTime;
 import com.tyler.YouthEngedi.jwts.JwtTokenProvider;
 import com.tyler.YouthEngedi.models.User;
 import com.tyler.YouthEngedi.models.enums.AuthProvider;
+import com.tyler.YouthEngedi.models.enums.Role;
 import com.tyler.YouthEngedi.services.CookieService;
 import com.tyler.YouthEngedi.services.VerificationTokenService;
 import jakarta.servlet.ServletException;
@@ -22,6 +23,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.Optional;
+import java.util.Set;
 
 import static com.tyler.YouthEngedi.constants.UrlConstants.*;
 import static com.tyler.YouthEngedi.services.CookieService.production;
@@ -83,9 +85,11 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
                                 .dateOfBirth(dateOfBirth)
                                 .authProvider(AuthProvider.OAUTH2)
                                 .enabled(true)
+                                .roles(Set.of(Role.MEMBER))
                                 .createdAt(LocalDateTime.now())
                                 .build()
                 ));
+
 
 
         issueTokenAndRedirect(request, response, user);

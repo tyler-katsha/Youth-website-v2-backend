@@ -31,15 +31,19 @@ import java.util.concurrent.CompletableFuture;
 import static com.tyler.YouthEngedi.constants.UrlConstants.FRONTEND_CALENDER_PROD;
 
 @Service
-@RequiredArgsConstructor
 public class EventService {
 
     private final EventRepository eventRepository;
-    private final EmailService emailService;
     private final UserRepository userRepository;
     private final AnnouncementRepository announcementRepository;
     private final EventMapper eventMapper;
 
+    public EventService(EventRepository eventRepository,UserRepository userRepository,AnnouncementRepository announcementRepository,EventMapper mapper){
+        this.announcementRepository = announcementRepository;
+        this.eventRepository = eventRepository;
+        this.eventMapper = mapper;
+        this.userRepository = userRepository;
+    }
 
     @LogExecutionTime(value="Creating event in EventService class",doSave = false)
     public EventResponse createEvent(EventRequest request,long userId){
@@ -56,9 +60,9 @@ public class EventService {
 
         String subject = String.format("Event Added: %s", event.getTitle());
 
-        CompletableFuture.runAsync(() -> {
-                emailService.sendEmail(emailBody,subject);
-        });
+//        CompletableFuture.runAsync(() -> {
+//                emailService.sendEmail(emailBody,subject);
+//        });
 
         Announcement announcement = Announcement
                 .builder()
@@ -96,9 +100,9 @@ public class EventService {
 
         String subject = String.format("Event Cancelled: %s",existingEvent.getTitle());
 
-        CompletableFuture.runAsync(() -> {
-                emailService.sendEmail(emailBody,subject);
-        });
+//        CompletableFuture.runAsync(() -> {
+//                emailService.sendEmail(emailBody,subject);
+//        });
 
         Announcement existingAnnouncement = announcementRepository.findByEvent_EventId(eventId).orElseThrow(() -> new EventException("Event is not found or does not exist"));
 

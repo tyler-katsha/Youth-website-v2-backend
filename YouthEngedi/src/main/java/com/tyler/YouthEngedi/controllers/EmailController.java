@@ -19,6 +19,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.concurrent.CompletableFuture;
+
 import static com.tyler.YouthEngedi.constants.UrlConstants.FRONTEND_RESET_PASSWORD_DEV;
 import static com.tyler.YouthEngedi.constants.UrlConstants.FRONTEND_RESET_PASSWORD_PROD;
 import static com.tyler.YouthEngedi.services.CookieService.production;
@@ -39,7 +41,9 @@ public class EmailController {
     @PostMapping("/send-email")
     public ResponseEntity<?> sendEmail(@RequestBody EmailRequest request){
         try{
-            emailService.sendEmail(request);
+            CompletableFuture.runAsync(() -> {
+                emailService.sendEmail(request);
+            });
             return new ResponseEntity<>("Email sent.",HttpStatus.OK);
         } catch (Exception e){
             return new ResponseEntity<>(new ApiResult(false,"Something went wrong. Please try again later."),HttpStatus.BAD_REQUEST);
@@ -50,7 +54,6 @@ public class EmailController {
     public ResponseEntity<?> sendEmail(@RequestBody PartialPasswordResetRequest request){
         try{
 
-            System.out.println(request.getEmail());
             User user = userRepository.findByEmail(request.getEmail()).orElseThrow(() -> new ResourceNotFoundException("User doesn't exist"));
             String token = jwtTokenProvider.generateToken(user);
 

@@ -76,6 +76,7 @@ public class UserController {
         } catch (ResourceNotFoundException e){
             return new ResponseEntity<>(new ApiResult(false,e.getMessage()),HttpStatus.NOT_FOUND);
         } catch (Exception e){
+            e.printStackTrace();
             return new ResponseEntity<>(new ApiResult(false,"Something went wrong. Please try again later."),HttpStatus.BAD_REQUEST);
         }
     }

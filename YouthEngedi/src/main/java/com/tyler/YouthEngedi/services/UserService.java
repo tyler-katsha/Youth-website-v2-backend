@@ -1,9 +1,6 @@
 package com.tyler.YouthEngedi.services;
 
-import com.tyler.YouthEngedi.Exceptions.AuthorizationException;
-import com.tyler.YouthEngedi.Exceptions.LockedAccountException;
-import com.tyler.YouthEngedi.Exceptions.PasswordResetException;
-import com.tyler.YouthEngedi.Exceptions.ResourceNotFoundException;
+import com.tyler.YouthEngedi.Exceptions.*;
 import com.tyler.YouthEngedi.Repository.UserRepository;
 import com.tyler.YouthEngedi.annotations.LogExecutionTime;
 import com.tyler.YouthEngedi.jwts.JwtTokenProvider;
@@ -22,17 +19,16 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.*;
 
 @Service
-@RequiredArgsConstructor
 public class UserService {
 
     private final UserRepository userRepository;
@@ -47,8 +43,17 @@ public class UserService {
 //    private final JwtTokenProvider jwtTokenProvider;
     private final CookieService cookieService;
 
-    @Value("${app.jwt.expiration-milliseconds}")
-    private long maxAge;
+
+    public UserService(CookieService cookieService,UserRepository userRepository,JwtTokenProvider tokenProvider,CloudinaryService cloudinaryService,UserMapper userMapper){
+        this.cookieService =cookieService;
+        this.cloudinaryService = cloudinaryService;
+        this.userMapper = userMapper;
+        this.userRepository = userRepository;
+        this.tokenProvider = tokenProvider;
+    }
+
+//    @Value("${app.jwt.expiration-milliseconds}")
+//    private long maxAge;
 
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder(12);
 
@@ -58,7 +63,7 @@ public class UserService {
         Optional<User> existingUser = userRepository.findByEmail(request.getEmail());
 
         if(existingUser.isPresent()){
-            return String.format("Existing user with email: %s already exists. Please use a different email.",request.getEmail());
+            throw new AuthorizationException(String.format("Existing user with email: %s already exists. Please use a different email.",request.getEmail()));
         }
 
         User user = userMapper.toUser(request);
@@ -66,6 +71,7 @@ public class UserService {
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         user.setAuthProvider(AuthProvider.LOCAL);
         user.setEnabled(true);
+        user.setBio(request.getBio());
 
         if(request.getProfileImageUrl() != null && !request.getProfileImageUrl().isEmpty()){
                 String imageUrl = cloudinaryService.upload(request.getProfileImageUrl());
@@ -75,7 +81,7 @@ public class UserService {
         // verificationTokenService.sendVerificationLink(user);
         userRepository.save(user);
 
-        return "Registration successful. Verification email sent. Check your inbox.";
+        return "Registration successful";
     }
 
     @LogExecutionTime(value="Login user")
@@ -131,21 +137,29 @@ public class UserService {
 
     @LogExecutionTime(value="Updating user profile in UserService class",doSave = false)
     public UserProfileResponse updateProfile(ProfileRequest request,long userId) {
-            User user = userRepository.findById(userId).orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        User user = userRepository.findById(userId).orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
-            if (request.getName() != null) user.setName(request.getName());
-            if (request.getBio() != null) user.setBio(request.getBio());
-            if (request.getImage() != null && !request.getImage().isEmpty()) {
-                String url = cloudinaryService.upload(request.getImage(),user.getId());
-                user.setProfileImageUrl(url);
-            }
+        if (request.getName() != null) user.setName(request.getName());
+        if (request.getBio() != null) user.setBio(request.getBio());
 
-            User saved = userRepository.save(user);
+        MultipartFile image = request.getImage();
 
-            // userCacheService.evict(user.getEmail());
+        if (image != null && !image.isEmpty()) {
+            String url = cloudinaryService.upload(request.getImage(),user.getId());
+            user.setProfileImageUrl(url);
+        }
+        else if(request.getPreviewUrl() != null) {
+            user.setProfileImageUrl(request.getPreviewUrl());
+        }
+        else{
+            user.setProfileImageUrl(null);
+        }
 
-            return userMapper.mapToProfileResponse(saved);
+        User saved = userRepository.save(user);
 
+        // userCacheService.evict(user.getEmail());
+
+        return userMapper.mapToProfileResponse(saved);
     }
 
     @LogExecutionTime(value="Updating user role in UserService class",doSave = false)

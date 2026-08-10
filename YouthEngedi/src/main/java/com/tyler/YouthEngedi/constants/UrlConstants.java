@@ -19,11 +19,11 @@ public class UrlConstants {
     public final static String FRONTEND_RESET_PASSWORD_PROD = FRONTEND_URL_PROD + "reset-password?token=%s&email=%s";
     public final static String FRONTEND_CALENDER_PROD = FRONTEND_URL_PROD + "calendar";
 
-    public final static String PYTHON_URL_LOCAL = "http://localhost:8000/";
+    public final static String PYTHON_URL_LOCAL = "http://localhost:8001/";
     public final static String PYTHON_GREETING_DEV = PYTHON_URL_LOCAL + "greeting";
     public final static String PYTHON_PREDICTION_DEV = PYTHON_URL_LOCAL + "predict";
 
-    public final static String PYTHON_URL_PROD = "https://youthengedi-app-v1-0.onrender.com/";
+    public final static String PYTHON_URL_PROD = "http://python:8001/";
     public final static String PYTHON_GREETING_PROD  = PYTHON_URL_PROD + "greeting";
     public final static String PYTHON_PREDICTION_PROD  = PYTHON_URL_PROD + "predict";
 }

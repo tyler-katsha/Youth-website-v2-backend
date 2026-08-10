@@ -65,10 +65,8 @@ public class UserMapperImpl implements UserMapper {
     public UserProfileResponse mapToProfileResponse(User existingUser) {
         return UserProfileResponse
                 .builder()
-                .name(existingUser.getName())
-                .dateOfBirth(existingUser.getDateOfBirth())
                 .bio(existingUser.getBio())
-                .roles(existingUser.getRoles())
+                .previewUrl(existingUser.getProfileImageUrl())
                 .build();
     }
 }

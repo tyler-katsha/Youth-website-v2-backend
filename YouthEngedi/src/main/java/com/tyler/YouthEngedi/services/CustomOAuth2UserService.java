@@ -20,11 +20,13 @@ import java.util.Set;
 
 
 @Service
-@RequiredArgsConstructor
 public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
     private final UserRepository userRepository;
 
+    public CustomOAuth2UserService(UserRepository repository){
+        this.userRepository = repository;
+    }
     @Override
     @NullMarked
     public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {

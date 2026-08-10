@@ -24,9 +24,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.concurrent.CompletableFuture;
 
 @Service
-@RequiredArgsConstructor
 public class RoleRequestService {
 
     private final RoleRequestRepository repository;
@@ -35,6 +35,13 @@ public class RoleRequestService {
     private final UserService userService;
     private final RoleRequestMapper roleRequestMapper;
 
+    public RoleRequestService(RoleRequestRepository repository,EmailService emailService,UserRepository userRepository,UserService userService,RoleRequestMapper mapper){
+        this.repository = repository;
+        this.emailService = emailService;
+        this.userRepository = userRepository;
+        this.userService = userService;
+        this.roleRequestMapper = mapper;
+    }
     @LogExecutionTime(value="Fetch all roleRequests in RoleRequestService class",doSave = false)
     public Page<RoleChangeRequest> findAllRoleRequests(int page, int size) {
 
@@ -69,12 +76,12 @@ public class RoleRequestService {
                 .user(user)
                 .build();
 
-        String subject = "Role Request Submitted Successfully";
-        String body = HtmlTemplate.roleRequestUpgrade();
+//        String subject = "Role Request Submitted Successfully";
+//        String body = HtmlTemplate.roleRequestUpgrade();
 
-        emailService.sendEmail(user.getEmail(),subject,body);
-
-        emailService.sendAdminRequest(request);
+//        emailService.sendEmail(user.getEmail(),subject,body);
+//
+//        emailService.sendAdminRequest(request);
 
         repository.save(request);
     }
@@ -98,7 +105,7 @@ public class RoleRequestService {
 
         repository.save(roleRequest);
 
-        emailService.sendApprovedRequest(reviewBy,user,roleRequest);
+//        emailService.sendApprovedRequest(reviewBy,user,roleRequest);
 
         removeRoleRequest(request.getRoleReqId());
     }
@@ -112,11 +119,13 @@ public class RoleRequestService {
         roleRequest.setReviewAt(LocalDateTime.now());
         roleRequest.setReviewedBy(reviewBy);
 
-        User user = roleRequest.getUser();
+        //User user = roleRequest.getUser();
 
         repository.save(roleRequest);
 
-        emailService.sendRejectedRequest(reviewBy,user,roleRequest);
+//        CompletableFuture.runAsync(() -> {
+//            emailService.sendRejectedRequest(reviewBy,user,roleRequest);
+//        });
 
         removeRoleRequest(request.getRoleReqId());
     }

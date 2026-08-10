@@ -11,11 +11,13 @@ import org.springframework.stereotype.Service;
 import java.time.Duration;
 
 @Service
-@RequiredArgsConstructor
 public class UserCacheService {
 
     private final RedisTemplate<String, Object> redisTemplate;
 
+    public UserCacheService(RedisTemplate<String, Object> redisTemplate){
+        this.redisTemplate = redisTemplate;
+    }
     @Value("${app.redis.expiration-minutes}")
     private int redisTTL;
 

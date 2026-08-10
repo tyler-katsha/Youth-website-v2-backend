@@ -11,11 +11,15 @@ import java.time.LocalDate;
 import java.time.Month;
 
 @Service
-@RequiredArgsConstructor
 public class ActiveUserService {
 
     private final RedisTemplate<String, Object> redisTemplate;
     private final ActiveUserRepository activeUserRepository;
+
+    public ActiveUserService(RedisTemplate<String,Object> redisTemplate,ActiveUserRepository activeUserRepository){
+        this.redisTemplate = redisTemplate;
+        this.activeUserRepository = activeUserRepository;
+    }
 
     private static final String ACTIVE_USERS_KEY = "active_users:";
 

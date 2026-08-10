@@ -8,6 +8,7 @@ import com.tyler.YouthEngedi.models.Event;
 import com.tyler.YouthEngedi.models.dtos.AnnouncementDto;
 import com.tyler.YouthEngedi.models.dtos.EventResponse;
 import com.tyler.YouthEngedi.models.enums.AnnouncementType;
+import com.tyler.YouthEngedi.models.mappers.AnnouncementMapper;
 import com.tyler.YouthEngedi.utils.TimeUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,19 +23,23 @@ import java.time.LocalTime;
 import java.util.List;
 
 @Service
-@RequiredArgsConstructor
 public class AnnouncementService {
     private final AnnouncementRepository announcementRepository;
     private final EventRepository eventRepository;
+    private final AnnouncementMapper announcementMapper;
 
+    public AnnouncementService(AnnouncementRepository announcementRepository,EventRepository eventRepository,AnnouncementMapper announcementMapper){
+        this.announcementRepository = announcementRepository;
+        this.eventRepository = eventRepository;
+        this.announcementMapper = announcementMapper;
+    }
     public Page<AnnouncementDto> findAll(int page,int size){
-        Page<Announcement> announcements = announcementRepository.findActiveAnnouncements(PageRequest.of(page,size, Sort.by(Sort.Direction.DESC,"createdAt")));
 
-        return announcements.map(this::mapToResponse);
+        return announcementRepository.findActiveAnnouncements(PageRequest.of(page,size, Sort.by(Sort.Direction.DESC,"createdAt"))).map(announcementMapper::mapToResponse);
     }
 
     public AnnouncementDto findById(long id) {
-        return mapToResponse(announcementRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Announcement was not found")));
+        return announcementMapper.mapToResponse(announcementRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Announcement was not found")));
     }
 
     public void createAnnouncement(AnnouncementDto request){
@@ -65,19 +70,6 @@ public class AnnouncementService {
     public void deleteAnnouncement(long id){
         Announcement existingAnnouncement = announcementRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Announcement not found"));
         announcementRepository.delete(existingAnnouncement);
-    }
-
-    private AnnouncementDto mapToResponse(Announcement announcement){
-        return AnnouncementDto
-                .builder()
-                .id(announcement.getAnnouncementId())
-                .title(announcement.getTitle())
-                .message(announcement.getMessage())
-                .type(announcement.getType())
-                .createdAt(TimeUtils.getRemainingTimeText(announcement.getCreatedAt()))
-                .expiresAt(TimeUtils.getRemainingTimeText(announcement.getExpiresAt()))
-                .isUrgent(announcement.isUrgent())
-                .build();
     }
 
 

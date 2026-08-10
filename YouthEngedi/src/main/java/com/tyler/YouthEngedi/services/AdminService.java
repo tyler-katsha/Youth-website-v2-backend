@@ -19,13 +19,15 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 @Service
-@RequiredArgsConstructor
 public class AdminService {
 
     private final AuditRepository auditRepository;
     private final PerformanceRepository performanceRepository;
-    private final EmailService emailService;
 
+    public AdminService(AuditRepository auditRepository,PerformanceRepository performanceRepository){
+        this.auditRepository = auditRepository;
+        this.performanceRepository = performanceRepository;
+    }
     public Page<AuditLog> getSystemLogs(int page, int size){
         return auditRepository.findAll(PageRequest.of(page,size,Sort.by(Sort.Direction.DESC,"now")));
     }
@@ -34,8 +36,8 @@ public class AdminService {
 
         return performanceRepository.findAll(PageRequest.of(page,size,Sort.by(Sort.Direction.DESC,"createdAt")));
     }
-
-    public void sendTestEmail(String type) {
-        emailService.sendTestEmail(type);
-    }
+//
+//    public void sendTestEmail(String type) {
+//        emailService.sendTestEmail(type);
+//    }
 }

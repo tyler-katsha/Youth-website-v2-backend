@@ -32,20 +32,19 @@ public class AdminController {
     public ResponseEntity<Page<Performance>> getSystemPerformanceData(@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "100") int size){
         return ResponseEntity.ok(adminService.getSystemPerformanceData(page,size));
     }
-
-    @PreAuthorize("hasRole('ADMIN')")
-    @PostMapping("test-email/{type}")
-    public ResponseEntity<ApiResult> sendTestEmail(@PathVariable String type){
-        try{
-            adminService.sendTestEmail(type);
-            return ResponseEntity.ok(new ApiResult(true,"Test email sent successfully"));
-        } catch (ResourceNotFoundException e){
-            return new ResponseEntity<>(new ApiResult(false,e.getMessage()),HttpStatus.NOT_FOUND);
-        } catch (Exception e){
-            e.printStackTrace();
-            return new ResponseEntity<>(new ApiResult(false,"Something went wrong. Please try again later."),HttpStatus.BAD_REQUEST);
-        }
-    }
+    
+//    @PreAuthorize("hasRole('ADMIN')")
+//    @PostMapping("test-email/{type}")
+//    public ResponseEntity<ApiResult> sendTestEmail(@PathVariable String type){
+//        try{
+//            adminService.sendTestEmail(type);
+//            return ResponseEntity.ok(new ApiResult(true,"Test email sent successfully"));
+//        } catch (ResourceNotFoundException e){
+//            return new ResponseEntity<>(new ApiResult(false,e.getMessage()),HttpStatus.NOT_FOUND);
+//        } catch (Exception e){
+//            return new ResponseEntity<>(new ApiResult(false,"Something went wrong. Please try again later."),HttpStatus.BAD_REQUEST);
+//        }
+//    }
 
 
 }

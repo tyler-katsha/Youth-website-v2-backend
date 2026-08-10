@@ -16,4 +16,5 @@ public class UserRegisterRequest {
     private String dateOfBirth;
     private String password;
     private MultipartFile profileImageUrl;
+    private String bio;
 }

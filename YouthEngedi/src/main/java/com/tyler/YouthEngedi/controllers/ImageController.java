@@ -1,5 +1,6 @@
 package com.tyler.YouthEngedi.controllers;
 
+import com.tyler.YouthEngedi.Exceptions.ExplicitContentException;
 import com.tyler.YouthEngedi.Exceptions.ImageException;
 import com.tyler.YouthEngedi.Exceptions.ResourceNotFoundException;
 import com.tyler.YouthEngedi.models.dtos.ApiResult;
@@ -16,12 +17,14 @@ import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/api/v1")
-@RequiredArgsConstructor
 @Tag(name="Image Management",description = "Api for fetching and managing images")
 public class ImageController {
 
     private final ImageService imageService;
 
+    public ImageController(ImageService imageService){
+        this.imageService = imageService;
+    }
     @PreAuthorize("hasAnyRole('ADMIN','MEMBER','YOUTH_LEADER')")
     @GetMapping("/images")
     public ResponseEntity<?> findAll(@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "100") int size){
@@ -35,12 +38,14 @@ public class ImageController {
     }
     @PreAuthorize("hasAnyRole('ADMIN','MEMBER','YOUTH_LEADER')")
     @PostMapping(value="/images/upload",consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<ApiResult> uploadImage(@ModelAttribute MultipartFile image){
+    public ResponseEntity<?> uploadImage(@ModelAttribute MultipartFile image){
         try{
-            return ResponseEntity.ok(new ApiResult(true,imageService.uploadImage(image)));
+            return ResponseEntity.ok(imageService.uploadImage(image));
         } catch (ImageException e){
             return new ResponseEntity<>(new ApiResult(false,"Unable to upload image"),HttpStatus.BAD_REQUEST);
-        } catch (Exception e){
+        } catch(ExplicitContentException e){
+            return new ResponseEntity<>(new ApiResult(false,e.getMessage()),HttpStatus.NOT_ACCEPTABLE);
+        }catch (Exception e){
             return new ResponseEntity<>(new ApiResult(false,"Something went wrong. Please try again later."),HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }

@@ -15,9 +15,6 @@ import java.util.Set;
 @NoArgsConstructor
 @Builder
 public class UserProfileResponse {
-    private String name;
-    private String dateOfBirth;
     private String bio;
-    @Enumerated(EnumType.STRING)
-    private Set<Role> roles;
+    private String previewUrl;
 }

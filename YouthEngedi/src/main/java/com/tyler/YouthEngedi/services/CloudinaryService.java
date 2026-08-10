@@ -27,13 +27,16 @@ import java.util.Map;
 import java.util.Optional;
 
 @Service
-@RequiredArgsConstructor
 public class CloudinaryService {
 
     private final Cloudinary cloudinary;
 
     private final UserRepository userRepository;
 
+    public CloudinaryService(Cloudinary cloudinary,UserRepository userRepository){
+        this.cloudinary = cloudinary;
+        this.userRepository = userRepository;
+    }
     private static final String TEMP_DIR = "temp/uploads/";
     public String upload(MultipartFile file){
         try{
@@ -117,7 +120,24 @@ public class CloudinaryService {
     }
 
     public String getFileFormattedSize(MultipartFile file){
-        return String.format("%d MB",file.getSize() / (1024 * 1024));
+        long bytes = file.getSize();
+
+        if (bytes < 1024) {
+            return bytes + " B";
+        }
+
+        double kb = bytes / 1024.0;
+        if (kb < 1024) {
+            return String.format("%.2f KB", kb);
+        }
+
+        double mb = kb / 1024.0;
+        if (mb < 1024) {
+            return String.format("%.2f MB", mb);
+        }
+
+        double gb = mb / 1024.0;
+        return String.format("%.2f GB", gb);
     }
 
     public boolean deleteImageByUrl(String imageUrl) {
