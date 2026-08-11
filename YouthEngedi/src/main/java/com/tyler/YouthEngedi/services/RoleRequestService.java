@@ -30,14 +30,12 @@ import java.util.concurrent.CompletableFuture;
 public class RoleRequestService {
 
     private final RoleRequestRepository repository;
-    private final EmailService emailService;
     private final UserRepository userRepository;
     private final UserService userService;
     private final RoleRequestMapper roleRequestMapper;
 
-    public RoleRequestService(RoleRequestRepository repository,EmailService emailService,UserRepository userRepository,UserService userService,RoleRequestMapper mapper){
+    public RoleRequestService(RoleRequestRepository repository,UserRepository userRepository,UserService userService,RoleRequestMapper mapper){
         this.repository = repository;
-        this.emailService = emailService;
         this.userRepository = userRepository;
         this.userService = userService;
         this.roleRequestMapper = mapper;

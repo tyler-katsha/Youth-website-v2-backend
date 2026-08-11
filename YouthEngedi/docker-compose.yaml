@@ -8,8 +8,8 @@ services:
       MYSQL_DATABASE: ${DB_NAME}
     env_file:
       - .env
-#    ports:
-#      - "3307:3306"
+    ports:
+      - "3306:3306"
     volumes:
       - mysql_data:/var/lib/mysql
     networks:
@@ -37,24 +37,24 @@ services:
       SPRING_DATASOURCE_PASSWORD: ${JDBC_PASSWORD}
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
     expose:
-      - "8080"
+      - "8080:8080"
     networks:
       - youth-network
-
-  nginx:
-    image: nginx:latest
-    restart: "unless-stopped"
-    container_name: nginx
-    ports:
-      - "80:80"
-      - "443:443"
-    depends_on:
-      - app
-    volumes:
-      - ./nginx/conf.d:/etc/nginx/conf.d
-      - ./frontend/dist:/usr/share/nginx/html
-    networks:
-      - youth-network\
+#
+#  nginx:
+#    image: nginx:latest
+#    restart: "unless-stopped"
+#    container_name: nginx
+#    ports:
+#      - "80:80"
+#      - "443:443"
+#    depends_on:
+#      - app
+#    volumes:
+#      - ./nginx/conf.d:/etc/nginx/conf.d
+#      - ./frontend/dist:/usr/share/nginx/html
+#    networks:
+#      - youth-network\
 
   python:
     build: ../python-api
@@ -63,7 +63,7 @@ services:
       - .env
     restart: unless-stopped
     expose:
-      - "8001"
+      - "8001:8001"
     networks:
       - youth-network
 
