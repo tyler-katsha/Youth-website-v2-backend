@@ -110,8 +110,7 @@ public class UserService {
     @LogExecutionTime(value = "Fetching all users in UserService class",doSave = false)
     public Page<UserResponse> findAll(int page, int size) {
 
-            return userRepository.findAll(PageRequest.of(page,size,Sort.by(Sort.Direction.DESC,"createdAt")))
-                    .map(userMapper::mapToResponse);
+            return userRepository.findAll(PageRequest.of(page,size,Sort.by(Sort.Direction.DESC,"createdAt"))).map(userMapper::mapToResponse);
     }
 
     @LogExecutionTime(value = "Fetching a user by id in UserService class",doSave = false)

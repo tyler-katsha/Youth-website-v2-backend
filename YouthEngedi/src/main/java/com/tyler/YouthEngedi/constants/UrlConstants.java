@@ -1,5 +1,7 @@
 package com.tyler.YouthEngedi.constants;
 
+import org.springframework.beans.factory.annotation.Value;
+
 public class UrlConstants {
 
     public final static String FRONTEND_URL_DEV = "http://localhost:5173/";
@@ -23,7 +25,8 @@ public class UrlConstants {
     public final static String PYTHON_GREETING_DEV = PYTHON_URL_LOCAL + "greeting";
     public final static String PYTHON_PREDICTION_DEV = PYTHON_URL_LOCAL + "predict";
 
-    public final static String PYTHON_URL_PROD = "http://python:8001/";
+    @Value("${internal.api}")
+    public static String PYTHON_URL_PROD;
     public final static String PYTHON_GREETING_PROD  = PYTHON_URL_PROD + "greeting";
     public final static String PYTHON_PREDICTION_PROD  = PYTHON_URL_PROD + "predict";
 }
