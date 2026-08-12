@@ -13,14 +13,6 @@ class PredictionRequest(BaseModel):
 app = FastAPI()
 detector = NudeDetector()
 
-
-@app.get("/greeting")
-def greeting():
-    return {
-        "message": "Hello from python to Spring boot"
-    }
-
-
 EXPLICIT_CLASSES = {
     "FEMALE_BREAST_EXPOSED",
     "FEMALE_GENITALIA_EXPOSED",
@@ -30,12 +22,12 @@ EXPLICIT_CLASSES = {
 }
 @app.post("/predict")
 async def predict(request: PredictionRequest):
-
+    temp_path = None
     try:
 
         response = requests.get(request.path)
 
-        # response.raise_for_status()
+        response.raise_for_status()
 
         suffix = os.path.splitext(request.path)[1] or ".jpg"
 
@@ -45,15 +37,16 @@ async def predict(request: PredictionRequest):
 
         detections = detector.detect(temp_path)
 
-
+        approved = all(d['class'] in EXPLICIT_CLASSES for d in detections)
         os.remove(temp_path)
 
         return {
-            "approved": True,
+            "approved": approved,
             "detections": detections
         }
 
 
-    except Exception as e:
+    except Exception:
         traceback.print_exc()
         raise HTTPException(status_code=500,detail=traceback.format_exc())
+

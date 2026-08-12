@@ -3,6 +3,8 @@ package com.tyler.YouthEngedi.controllers;
 import com.tyler.YouthEngedi.models.dtos.PredictionRequest;
 import com.tyler.YouthEngedi.models.dtos.PredictionResponse;
 import com.tyler.YouthEngedi.services.PythonService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -22,11 +24,14 @@ public class PythonController {
     }
 
     @PostMapping("/predict")
+    @Operation(summary = "Get's a prediction score from python",description = "Returns a prediction using Python ML model")
+    @ApiResponse(responseCode = "200",description = "Prediction score is and approved is sent to spring")
+    @ApiResponse(responseCode = "500",description = "An empty PredictionResponse is sent to spring")
     public ResponseEntity<PredictionResponse> getPrediction(@RequestBody PredictionRequest request){
         try{
             return ResponseEntity.ok(pythonService.getPrediction(request));
         } catch (Exception e){
-            return new ResponseEntity<>(PredictionResponse.builder().detections(List.of()).approved(false).build(), HttpStatus.INTERNAL_SERVER_ERROR);
+            return new ResponseEntity<>(PredictionResponse.builder().detections(null).approved(false).build(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 

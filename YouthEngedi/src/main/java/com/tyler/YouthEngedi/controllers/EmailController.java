@@ -10,6 +10,8 @@ import com.tyler.YouthEngedi.models.dtos.EmailRequest;
 import com.tyler.YouthEngedi.models.dtos.PartialPasswordResetRequest;
 import com.tyler.YouthEngedi.services.EmailService;
 import io.jsonwebtoken.ExpiredJwtException;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -39,18 +41,27 @@ public class EmailController {
     private final JwtTokenProvider jwtTokenProvider;
 
     @PostMapping("/send-email")
+    @Operation(summary = "Sends a email to the developer for an inquiry")
+    @ApiResponse(responseCode = "200",description = "Send's a confirmation message back to the user")
+    @ApiResponse(responseCode = "500",description = "Something went wrong")
     public ResponseEntity<?> sendEmail(@RequestBody EmailRequest request){
         try{
             CompletableFuture.runAsync(() -> {
                 emailService.sendEmail(request);
             });
-            return new ResponseEntity<>("Email sent.",HttpStatus.OK);
+            return ResponseEntity.ok("Email sent.");
         } catch (Exception e){
-            return new ResponseEntity<>(new ApiResult(false,"Something went wrong. Please try again later."),HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new ApiResult(false,"Something went wrong. Please try again later."),HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
     @PostMapping("/reset-password")
+    @Operation(summary = "Send a partial request of the user that want's to reset there password")
+    @ApiResponse(responseCode = "200",description = "The url is sent back to the user successfully")
+    @ApiResponse(responseCode = "404",description = "User is not found based on email")
+    @ApiResponse(responseCode = "401",description = "Token is expired/invalid")
+    @ApiResponse(responseCode = "403",description = "Unable to access that endpoint")
+    @ApiResponse(responseCode = "500",description = "Something went wrong")
     public ResponseEntity<?> sendEmail(@RequestBody PartialPasswordResetRequest request){
         try{
 
@@ -76,7 +87,7 @@ public class EmailController {
         } catch(ExpiredJwtException e){
             return new ResponseEntity<>(new ApiResult(false,"Token is expired"),HttpStatus.UNAUTHORIZED);
         } catch (Exception e){
-            return new ResponseEntity<>(new ApiResult(false,"Something went wrong. Please try again later."),HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new ApiResult(false,"Something went wrong. Please try again later."),HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 //    @PostMapping("/resend-verification")

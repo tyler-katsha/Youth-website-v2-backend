@@ -33,11 +33,6 @@ public class AdminService {
     }
 
     public Page<Performance> getSystemPerformanceData(int page, int size){
-
         return performanceRepository.findAll(PageRequest.of(page,size,Sort.by(Sort.Direction.DESC,"createdAt")));
     }
-//
-//    public void sendTestEmail(String type) {
-//        emailService.sendTestEmail(type);
-//    }
 }

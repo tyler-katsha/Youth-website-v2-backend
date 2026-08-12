@@ -6,6 +6,8 @@ import com.tyler.YouthEngedi.Exceptions.ResourceNotFoundException;
 import com.tyler.YouthEngedi.models.dtos.ApiResult;
 import com.tyler.YouthEngedi.models.dtos.FragmentedImage;
 import com.tyler.YouthEngedi.services.ImageService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -27,6 +29,10 @@ public class ImageController {
     }
     @PreAuthorize("hasAnyRole('ADMIN','MEMBER','YOUTH_LEADER')")
     @GetMapping("/images")
+    @Operation(summary = "Fetches all image objects using Pagination",description = "Fetches all the image objects in the database")
+    @ApiResponse(responseCode = "200",description = "Gets every image object")
+    @ApiResponse(responseCode = "400",description = "A bad (invalid URL) image was fetched")
+    @ApiResponse(responseCode = "500",description = "Something went wrong")
     public ResponseEntity<?> findAll(@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "100") int size){
          try{
              return ResponseEntity.ok(imageService.findAll(page,size));
@@ -38,6 +44,11 @@ public class ImageController {
     }
     @PreAuthorize("hasAnyRole('ADMIN','MEMBER','YOUTH_LEADER')")
     @PostMapping(value="/images/upload",consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(summary = "uploads image into Object Storage")
+    @ApiResponse(responseCode = "200",description = "Successfully upload image")
+    @ApiResponse(responseCode = "400",description = "A bad (invalid URL) image was uploaded")
+    @ApiResponse(responseCode = "406",description = "An explict image trying to be uploaded")
+    @ApiResponse(responseCode = "500",description = "Something went wrong")
     public ResponseEntity<?> uploadImage(@ModelAttribute MultipartFile image){
         try{
             return ResponseEntity.ok(imageService.uploadImage(image));
@@ -52,6 +63,10 @@ public class ImageController {
 
     @PreAuthorize("hasAnyRole('ADMIN','MEMBER','YOUTH_LEADER')")
     @PostMapping(value="/images/upload-chunks",consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(summary = "Split image into fragments and uploads it into Object Storage")
+    @ApiResponse(responseCode = "200",description = "Successfully upload image")
+    @ApiResponse(responseCode = "400",description = "A bad (invalid URL) image was uploaded")
+    @ApiResponse(responseCode = "500",description = "Something went wrong")
     public ResponseEntity<ApiResult> uploadChunks(@ModelAttribute FragmentedImage fragmentedImage){
         try{
             imageService.uploadChunks(fragmentedImage);
@@ -65,6 +80,11 @@ public class ImageController {
 
     @PreAuthorize("hasAnyRole('ADMIN','MEMBER','YOUTH_LEADER')")
     @DeleteMapping("/images/{id}")
+    @Operation(summary = "Deletes image based on id")
+    @ApiResponse(responseCode = "200",description = "Successfully deletes image")
+    @ApiResponse(responseCode = "404",description = "Image not found based by id")
+    @ApiResponse(responseCode = "400",description = "A bad (invalid URL) image was uploaded")
+    @ApiResponse(responseCode = "500",description = "Something went wrong")
     public ResponseEntity<ApiResult> deleteImage(@PathVariable long id){
         try{
             imageService.deleteImage(id);
@@ -74,7 +94,6 @@ public class ImageController {
         }catch (ImageException e){
             return new ResponseEntity<>(new ApiResult(false,"Unable to upload image"),HttpStatus.BAD_REQUEST);
         } catch (Exception e){
-            e.printStackTrace();
             return new ResponseEntity<>(new ApiResult(false,"Something went wrong. Please try again later."),HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }

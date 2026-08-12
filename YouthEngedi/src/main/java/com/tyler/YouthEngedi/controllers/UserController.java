@@ -31,7 +31,7 @@ public class UserController {
 
     @PreAuthorize("hasAnyRole('ADMIN','YOUTH_LEADER')")
     @GetMapping("/users")
-    @Operation(summary = "Finds all the users with a certain amount of pages for each request",description = "Fetches all the users in the database")
+    @Operation(summary = "Finds all the users using Pagination",description = "Fetches all the users in the database")
     @ApiResponse(responseCode="200",description="Users was found successfully.")
     @ApiResponse(responseCode="404",description="An error was thrown maybe like a database offline.")
     @ApiResponse(responseCode="400",description="Users was not found in the database")
@@ -76,7 +76,6 @@ public class UserController {
         } catch (ResourceNotFoundException e){
             return new ResponseEntity<>(new ApiResult(false,e.getMessage()),HttpStatus.NOT_FOUND);
         } catch (Exception e){
-            e.printStackTrace();
             return new ResponseEntity<>(new ApiResult(false,"Something went wrong. Please try again later."),HttpStatus.BAD_REQUEST);
         }
     }

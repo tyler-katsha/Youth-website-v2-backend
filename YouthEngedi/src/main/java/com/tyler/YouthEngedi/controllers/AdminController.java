@@ -5,6 +5,8 @@ import com.tyler.YouthEngedi.models.AuditLog;
 import com.tyler.YouthEngedi.models.Performance;
 import com.tyler.YouthEngedi.models.dtos.ApiResult;
 import com.tyler.YouthEngedi.services.AdminService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -23,28 +25,28 @@ public class AdminController {
 
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/logs")
-    public ResponseEntity<Page<AuditLog>> getSystemLogs(@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "100") int size){
-        return ResponseEntity.ok(adminService.getSystemLogs(page,size));
+    @Operation(summary = "Finds all the system logs using Pagination",description = "Fetches all the logs in the database")
+    @ApiResponse(responseCode = "200",description = "Get's all system logs")
+    @ApiResponse(responseCode = "500",description = "Something went wrong")
+    public ResponseEntity<?> getSystemLogs(@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "100") int size){
+        try{
+            return ResponseEntity.ok(adminService.getSystemLogs(page,size));
+        } catch(Exception e){
+            return new ResponseEntity<>(new ApiResult(false,"Something went wrong"),HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/performances")
-    public ResponseEntity<Page<Performance>> getSystemPerformanceData(@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "100") int size){
-        return ResponseEntity.ok(adminService.getSystemPerformanceData(page,size));
+    @Operation(summary = "Finds all the system performance data using Pagination",description = "Fetches all the performances data in the database")
+    @ApiResponse(responseCode = "200",description = "Get's all system performance data")
+    @ApiResponse(responseCode = "500",description = "Something went wrong")
+    public ResponseEntity<?> getSystemPerformanceData(@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "100") int size){
+        try{
+            return ResponseEntity.ok(adminService.getSystemPerformanceData(page,size));
+        } catch(Exception e){
+            return new ResponseEntity<>(new ApiResult(false,"Something went wrong"),HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
-    
-//    @PreAuthorize("hasRole('ADMIN')")
-//    @PostMapping("test-email/{type}")
-//    public ResponseEntity<ApiResult> sendTestEmail(@PathVariable String type){
-//        try{
-//            adminService.sendTestEmail(type);
-//            return ResponseEntity.ok(new ApiResult(true,"Test email sent successfully"));
-//        } catch (ResourceNotFoundException e){
-//            return new ResponseEntity<>(new ApiResult(false,e.getMessage()),HttpStatus.NOT_FOUND);
-//        } catch (Exception e){
-//            return new ResponseEntity<>(new ApiResult(false,"Something went wrong. Please try again later."),HttpStatus.BAD_REQUEST);
-//        }
-//    }
-
 
 }
