@@ -68,6 +68,7 @@ public class AnnouncementController {
 
     @PutMapping("/announcements")
     @PreAuthorize("hasAnyRole('ADMIN','YOUTH_LEADER')")
+    @Operation(summary = "Updates an existing announcement",description = "Updates an existing announcement with new data and replaces the old data")
     @ApiResponse(responseCode = "200",description = "Successfully updates existing announcement with new data")
     @ApiResponse(responseCode = "404",description = "Announcement not found based on id")
     @ApiResponse(responseCode = "500",description = "Something went wrong")
@@ -84,6 +85,7 @@ public class AnnouncementController {
 
     @DeleteMapping("/announcements/{id}")
     @PreAuthorize("hasAnyRole('ADMIN','YOUTH_LEADER')")
+    @Operation(summary = "Delete an announcement by id",description = "Delete an announcement based on it's id")
     @ApiResponse(responseCode = "200",description = "Successfully deletes announcement based on id")
     @ApiResponse(responseCode = "404",description = "Announcement not found based on id")
     @ApiResponse(responseCode = "500",description = "Something went wrong")

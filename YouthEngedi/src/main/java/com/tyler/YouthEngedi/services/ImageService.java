@@ -48,8 +48,6 @@ public class ImageService {
         PredictionRequest request = PredictionRequest.builder().path(url).build();
         PredictionResponse response = pythonService.getPrediction(request);
 
-        System.out.println("Url: " + url);
-        System.out.println("Response: " + response);
         if(!response.isApproved()){
             cloudinaryService.deleteImageByUrl(url);
             throw new ExplicitContentException("18+ content is not allowed");
@@ -66,7 +64,7 @@ public class ImageService {
 
         imageRepository.save(image);
 
-        return "Image/s uploaded ";
+        return "Image/s uploaded";
     }
 
     @AuditAction("Uploading images to Object storage using Cloudinary in chunks")

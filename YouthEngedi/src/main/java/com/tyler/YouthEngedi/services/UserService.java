@@ -226,6 +226,8 @@ public class UserService {
 
             roles.add(Role.MEMBER);
             existingUser.setRoles(roles);
+
+            userRepository.save(existingUser);
             return userMapper.mapToResponse(existingUser);
         }
         if(existingUser.getRoles().size() == 1){
@@ -235,6 +237,8 @@ public class UserService {
         Set<Role> roles = removeRoles(existingUser.getRoles());
 
         existingUser.setRoles(roles);
+
+        userRepository.save(existingUser);
 
         return userMapper.mapToResponse(existingUser);
     }
