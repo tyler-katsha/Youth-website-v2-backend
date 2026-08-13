@@ -173,6 +173,8 @@ public class UserService {
             tempRoles.add(Role.YOUTH_LEADER);
 
             existingUser.setRoles(tempRoles);
+
+            userRepository.save(existingUser);
             return userMapper.mapToResponse(existingUser);
         }
 
@@ -182,6 +184,8 @@ public class UserService {
             tempRoles.add(Role.ADMIN);
 
             existingUser.setRoles(tempRoles);
+
+            userRepository.save(existingUser);
             return userMapper.mapToResponse(existingUser);
         }
 
@@ -189,11 +193,13 @@ public class UserService {
             return userMapper.mapToResponse(existingUser);
         }
 
-            Role nextRole = getNextRole(existingUser.getRoles());
+        Role nextRole = getNextRole(existingUser.getRoles());
 
-            Set<Role> roles = existingUser.getRoles();
-            roles.add(nextRole);
-            existingUser.setRoles(roles);
+        Set<Role> roles = existingUser.getRoles();
+        roles.add(nextRole);
+        existingUser.setRoles(roles);
+
+        userRepository.save(existingUser);
 
         return userMapper.mapToResponse(existingUser);
     }
