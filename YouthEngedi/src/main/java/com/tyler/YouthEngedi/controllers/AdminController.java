@@ -16,12 +16,15 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequiredArgsConstructor
 @RequestMapping("/api/v1/admin")
 @Tag(name="Admin Management",description = "Api fetching and managing admin based features strictly")
 public class AdminController {
 
     private final AdminService adminService;
+
+    public AdminController(AdminService adminService){
+        this.adminService = adminService;
+    }
 
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/logs")

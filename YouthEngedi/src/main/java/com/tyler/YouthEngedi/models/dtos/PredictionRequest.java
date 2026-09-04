@@ -9,6 +9,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class PredictionRequest {
+public class PredictionRequest{
     private String path;
 }

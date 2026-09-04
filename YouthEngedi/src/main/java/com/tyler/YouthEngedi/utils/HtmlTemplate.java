@@ -1,17 +1,10 @@
 package com.tyler.YouthEngedi.utils;
 
-import com.tyler.YouthEngedi.models.enums.RequestStatus;
-import com.tyler.YouthEngedi.models.enums.Role;
-
 import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.Set;
 
-import static com.tyler.YouthEngedi.constants.UrlConstants.FRONTEND_CALENDER_DEV;
-import static com.tyler.YouthEngedi.constants.UrlConstants.FRONTEND_CALENDER_PROD;
-import static com.tyler.YouthEngedi.services.CookieService.production;
+import static com.tyler.YouthEngedi.constants.UrlConstants.*;
 
-public class HtmlTemplate {
+public final class HtmlTemplate {
 
 
     public static String removeEventHtml(String title, LocalDate eventDate, String startTime, String endTime){

@@ -1,7 +1,7 @@
 package com.tyler.YouthEngedi.models.mappers;
 
 import com.tyler.YouthEngedi.models.User;
-import com.tyler.YouthEngedi.models.dtos.UserCache;
+import com.tyler.YouthEngedi.models.dtos.Guest;
 import com.tyler.YouthEngedi.models.dtos.UserProfileResponse;
 import com.tyler.YouthEngedi.models.dtos.UserRegisterRequest;
 import com.tyler.YouthEngedi.models.dtos.UserResponse;
@@ -25,7 +25,8 @@ public interface UserMapper {
     User toUser(UserRegisterRequest request);
 
     UserResponse mapToResponse(User existingUser);
-    // UserResponse mapToResponse(UserCache existingCacheUser);
 
     UserProfileResponse mapToProfileResponse(User existingUser);
+
+    Guest toGuest(User guestUser);
 }

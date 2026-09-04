@@ -4,22 +4,22 @@ import com.tyler.YouthEngedi.Exceptions.*;
 import com.tyler.YouthEngedi.Repository.VerificationTokenRepository;
 import com.tyler.YouthEngedi.models.PasswordResetRequest;
 import com.tyler.YouthEngedi.models.User;
+import com.tyler.YouthEngedi.models.UserPrincipal;
 import com.tyler.YouthEngedi.models.VerificationToken;
 import com.tyler.YouthEngedi.models.dtos.ApiResult;
 import com.tyler.YouthEngedi.models.dtos.UserLoginRequest;
 import com.tyler.YouthEngedi.models.dtos.UserRegisterRequest;
-import com.tyler.YouthEngedi.services.CookieService;
 import com.tyler.YouthEngedi.services.EmailService;
 import com.tyler.YouthEngedi.services.UserService;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
@@ -27,14 +27,18 @@ import java.util.concurrent.CompletableFuture;
 
 @RestController
 @RequestMapping("/api/v1/auth")
-@RequiredArgsConstructor
 @Tag(name="Authentication Management",description = "Api for managing non-secure based endpoints")
 public class AuthenticationController {
 
     private final UserService userService;
     private final EmailService emailService;
-//    private final CookieService cookieService;
     private final VerificationTokenRepository verificationTokenRepository;
+
+    public AuthenticationController(UserService userService,EmailService emailService,VerificationTokenRepository verificationTokenRepository){
+        this.userService = userService;
+        this.emailService = emailService;
+        this.verificationTokenRepository = verificationTokenRepository;
+    }
 
     @PostMapping(value="/register", consumes=MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "Registers user to the system")
@@ -106,19 +110,13 @@ public class AuthenticationController {
             return new ResponseEntity<>("Something went wrong. Please try again",HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
-    @PostMapping("/logout")
-    @Operation(summary = "Log user out of system",description = "Destroys the Jwt-Token stored in that login period")
-    @ApiResponse(responseCode = "200",description = "Successful logs out user")
-    @ApiResponse(responseCode = "204",description = "Token not found")
-    @ApiResponse(responseCode = "500",description = "Something went wrong")
-    public ResponseEntity<?> logout(HttpServletResponse response){
-        try{
-            return ResponseEntity.ok(userService.logout(response));
-        } catch (ResourceNotFoundException e){
-            return new ResponseEntity<>("Failed to logout",HttpStatus.NO_CONTENT);
-        } catch (Exception e){
-            return new ResponseEntity<>("Something went wrong. Please try again",HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+
+    @PostMapping("/guest/redirect")
+    @Operation(summary = "Redirect guest to login page",description = "Redirects guest to the login page where they can create a account or login")
+    @ApiResponse(responseCode = "200",description = "Successful redirects guest")
+    public ResponseEntity<Void> redirectGuest(@RequestParam("token") String token){
+        userService.redirectGuest(token);
+        return ResponseEntity.ok().build();
     }
 
     @GetMapping("/verify")
@@ -139,10 +137,10 @@ public class AuthenticationController {
                 return ResponseEntity.badRequest().body("Token expired");
             }
 
-            User user = verificationToken.getUser();
+            var user = verificationToken.getUser();
 
             CompletableFuture.runAsync(() -> {
-                userService.enableMember(user);
+                userService.toggleEnabled(user,true);
             });
 
             verificationTokenRepository.delete(verificationToken);
@@ -160,7 +158,7 @@ public class AuthenticationController {
     @ApiResponse(responseCode = "200",description = "Password is reset successfully")
     @ApiResponse(responseCode = "406",description = "Password doesn't match requirements")
     @ApiResponse(responseCode = "503",description = "Jwt-Token is expired")
-    @ApiResponse(responseCode = "203",description = "User email not found or Guest email not found")
+    @ApiResponse(responseCode = "204",description = "User email not found or Guest email not found")
     @ApiResponse(responseCode = "500",description = "Something went wrong")
     public ResponseEntity<String> resetPassword(@RequestBody PasswordResetRequest request){
         try{

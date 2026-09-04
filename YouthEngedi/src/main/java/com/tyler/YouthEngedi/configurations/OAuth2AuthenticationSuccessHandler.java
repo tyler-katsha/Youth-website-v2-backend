@@ -6,14 +6,13 @@ import com.tyler.YouthEngedi.jwts.JwtTokenProvider;
 import com.tyler.YouthEngedi.models.User;
 import com.tyler.YouthEngedi.models.enums.AuthProvider;
 import com.tyler.YouthEngedi.models.enums.Role;
-import com.tyler.YouthEngedi.services.CookieService;
-import com.tyler.YouthEngedi.services.VerificationTokenService;
+import com.tyler.YouthEngedi.utils.WebSocketHelper;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.jspecify.annotations.NonNull;
-import org.springframework.http.HttpHeaders;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
@@ -22,11 +21,9 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
-import java.util.Optional;
 import java.util.Set;
 
 import static com.tyler.YouthEngedi.constants.UrlConstants.*;
-import static com.tyler.YouthEngedi.services.CookieService.production;
 
 @Component
 public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
@@ -36,10 +33,9 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
 
     @Autowired
     private UserRepository userRepository;
-//    @Autowired
-//    private CookieService cookieService;
-//    @Autowired
-//    private VerificationTokenService verificationTokenService;
+
+    @Autowired
+    private ApplicationEventPublisher publisher;
 
     @Override
     @LogExecutionTime(value = "Calling onAuthenticationSuccess() in OAuth2AuthenticationSuccessHandler class",doSave = false)
@@ -65,8 +61,10 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
                         existingUser.setName(name);
                     }
 
-                    if (profileImageUrl != null && !profileImageUrl.isBlank()) {
-                        existingUser.setProfileImageUrl(profileImageUrl);
+                    if(!existingUser.getAuthProvider().equals(AuthProvider.LOCAL)){
+                        if (profileImageUrl != null && !profileImageUrl.isBlank()) {
+                            existingUser.setProfileImageUrl(profileImageUrl);
+                        }
                     }
 
                     if (dateOfBirth != null && !dateOfBirth.isBlank()) {
@@ -91,6 +89,9 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
                 ));
 
 
+        var event = WebSocketHelper.buildLogin(user);
+
+        publisher.publishEvent(event);
 
         issueTokenAndRedirect(request, response, user);
     }

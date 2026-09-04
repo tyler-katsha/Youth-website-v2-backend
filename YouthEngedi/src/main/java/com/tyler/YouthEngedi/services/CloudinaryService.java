@@ -23,6 +23,7 @@ import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 
@@ -50,45 +51,49 @@ public class CloudinaryService {
     public String upload(MultipartFile file,long userId){
         try{
 
-            User user = userRepository.findById(userId).orElseThrow(() -> new ResourceNotFoundException("User doesn't exist"));
+            var user = userRepository.findById(userId)
+                    .orElseThrow(() -> new ResourceNotFoundException("User doesn't exist"));
 
-            var uploadResult = cloudinary.uploader().upload(file.getBytes(), ObjectUtils.asMap("resource_type", "auto","public_id","users/" + userId,"overwrite",true));
-            // Returns the secure URL to store in your database
+            var uploadResult = cloudinary.uploader()
+                    .upload(file.getBytes(), ObjectUtils.asMap("resource_type", "auto","public_id","users/" + userId,"overwrite",true));
 
-            String url = (String) uploadResult.get("secure_url");
+            var url = (String) uploadResult.get("secure_url");
 
             user.setProfileImageUrl(url);
 
             userRepository.save(user);
+
             return url;
         } catch (IOException e){
             return "Upload failed";
         }
     }
 
-    public String generateAltName(MultipartFile file){
-        try{
+    public String generateAltName(MultipartFile file) {
+        try {
             String fileName = file.getOriginalFilename();
 
-            if(fileName == null){
+            if (fileName == null || fileName.isBlank()) {
                 return "Uploaded image";
             }
 
-            fileName = fileName.replaceFirst("[.][^.]+$","");
-
-            fileName = fileName.replace("_"," ").replace("-"," ");
+            fileName = fileName.replaceFirst("[.][^.]+$", "");
+            fileName = fileName.replace("_", " ").replace("-", " ");
 
             StringBuilder alt = new StringBuilder();
 
-            for(String word:fileName.split("\\s+")){
-                if(!word.isEmpty()){
-                    alt.append(Character.toUpperCase(word.charAt(0))).append(word.substring(1).toLowerCase()).append(" ");
+            for (String word : fileName.split("\\s+")) {
+                if (!word.isEmpty()) {
+                    alt.append(Character.toUpperCase(word.charAt(0)))
+                            .append(word.substring(1).toLowerCase())
+                            .append(" ");
                 }
             }
 
-            return alt.toString().trim();
-        } catch (NullPointerException e){
-            return file.getOriginalFilename();
+            String result = alt.toString().trim();
+            return result.isEmpty() ? "Uploaded image" : result;
+        } catch (Exception e) {
+            return "Uploaded image";
         }
     }
 
@@ -128,32 +133,35 @@ public class CloudinaryService {
 
         double kb = bytes / 1024.0;
         if (kb < 1024) {
-            return String.format("%.2f KB", kb);
+            return String.format(Locale.US, "%.2f KB", kb);
         }
 
         double mb = kb / 1024.0;
         if (mb < 1024) {
-            return String.format("%.2f MB", mb);
+            return String.format(Locale.US, "%.2f MB", mb);
         }
 
         double gb = mb / 1024.0;
-        return String.format("%.2f GB", gb);
+        return String.format(Locale.US,"%.2f GB", gb);
     }
 
     public boolean deleteImageByUrl(String imageUrl) {
         try {
+            if (imageUrl == null || imageUrl.isBlank()) {
+                return false;
+            }
+
             String publicId = extractPublicId(imageUrl);
 
             if (publicId == null || publicId.isEmpty()) {
-                throw new IllegalArgumentException("Could not extract public ID from URL");
+                return false; // Return false cleanly instead of throwing uncaught IllegalArgumentException
             }
 
             var result = cloudinary.uploader().destroy(publicId, ObjectUtils.emptyMap());
 
             return "ok".equals(result.get("result"));
 
-        } catch (IOException e) {
-            e.printStackTrace();
+        } catch (Exception e) {
             return false;
         }
     }

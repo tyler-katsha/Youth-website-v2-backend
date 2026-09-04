@@ -3,6 +3,7 @@ package com.tyler.YouthEngedi.controllers;
 import com.tyler.YouthEngedi.Exceptions.ExplicitContentException;
 import com.tyler.YouthEngedi.Exceptions.ImageException;
 import com.tyler.YouthEngedi.Exceptions.ResourceNotFoundException;
+import com.tyler.YouthEngedi.models.UserPrincipal;
 import com.tyler.YouthEngedi.models.dtos.ApiResult;
 import com.tyler.YouthEngedi.models.dtos.FragmentedImage;
 import com.tyler.YouthEngedi.services.ImageService;
@@ -14,6 +15,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -27,6 +29,7 @@ public class ImageController {
     public ImageController(ImageService imageService){
         this.imageService = imageService;
     }
+
     @PreAuthorize("hasAnyRole('ADMIN','MEMBER','YOUTH_LEADER')")
     @GetMapping("/images")
     @Operation(summary = "Fetches all image objects using Pagination",description = "Fetches all the image objects in the database")
@@ -42,6 +45,7 @@ public class ImageController {
              return new ResponseEntity<>(new ApiResult(false,"Something went wrong. Please try again later."),HttpStatus.INTERNAL_SERVER_ERROR);
          }
     }
+
     @PreAuthorize("hasAnyRole('ADMIN','MEMBER','YOUTH_LEADER')")
     @PostMapping(value="/images/upload",consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "uploads image into Object Storage")
@@ -49,9 +53,9 @@ public class ImageController {
     @ApiResponse(responseCode = "400",description = "A bad (invalid URL) image was uploaded")
     @ApiResponse(responseCode = "406",description = "An explict image trying to be uploaded")
     @ApiResponse(responseCode = "500",description = "Something went wrong")
-    public ResponseEntity<?> uploadImage(@ModelAttribute MultipartFile image){
+    public ResponseEntity<?> uploadImage(@ModelAttribute MultipartFile image,@AuthenticationPrincipal UserPrincipal principal){
         try{
-            return ResponseEntity.ok(imageService.uploadImage(image));
+            return ResponseEntity.ok(imageService.uploadImage(image,principal.getUserId()));
         } catch (ImageException e){
             return new ResponseEntity<>(new ApiResult(false,"Unable to upload image"),HttpStatus.BAD_REQUEST);
         } catch(ExplicitContentException e){

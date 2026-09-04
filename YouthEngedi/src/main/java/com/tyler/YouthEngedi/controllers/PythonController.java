@@ -23,6 +23,7 @@ public class PythonController {
         this.pythonService = pythonService;
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/predict")
     @Operation(summary = "Get's a prediction score from python",description = "Returns a prediction using Python ML model")
     @ApiResponse(responseCode = "200",description = "Prediction score is and approved is sent to spring")

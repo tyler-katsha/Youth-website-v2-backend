@@ -23,9 +23,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.concurrent.CompletableFuture;
 
-import static com.tyler.YouthEngedi.constants.UrlConstants.FRONTEND_RESET_PASSWORD_DEV;
-import static com.tyler.YouthEngedi.constants.UrlConstants.FRONTEND_RESET_PASSWORD_PROD;
-import static com.tyler.YouthEngedi.services.CookieService.production;
+import static com.tyler.YouthEngedi.constants.UrlConstants.*;
 
 //import java.util.concurrent.CompletableFuture;
 
@@ -37,7 +35,6 @@ public class EmailController {
 
     private final EmailService emailService;
     private final UserRepository userRepository;
-//    private final VerificationTokenService verificationTokenService;
     private final JwtTokenProvider jwtTokenProvider;
 
     @PostMapping("/send-email")

@@ -1,12 +1,10 @@
 package com.tyler.YouthEngedi.services;
 
-import com.resend.*;
 import com.tyler.YouthEngedi.Exceptions.InvalidEmailException;
 import com.tyler.YouthEngedi.Repository.ContactSubmissionRepository;
-import com.tyler.YouthEngedi.models.*;
+import com.tyler.YouthEngedi.models.ContactSubmission;
 import com.tyler.YouthEngedi.models.dtos.EmailRequest;
 import com.tyler.YouthEngedi.utils.HtmlTemplate;
-import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -14,12 +12,11 @@ import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.xbill.DNS.Lookup;
+import org.xbill.DNS.Record;
 import org.xbill.DNS.TextParseException;
 import org.xbill.DNS.Type;
-import org.xbill.DNS.Record;
 
 import java.time.LocalDateTime;
-
 
 @Service
 public class EmailService {
@@ -30,7 +27,7 @@ public class EmailService {
     private final ContactSubmissionRepository contactSubmissionRepository;
     private final JavaMailSender mailSender;
 
-    public EmailService(ContactSubmissionRepository contactSubmissionRepository,JavaMailSender mailSender){
+    public EmailService(ContactSubmissionRepository contactSubmissionRepository, JavaMailSender mailSender) {
         this.contactSubmissionRepository = contactSubmissionRepository;
         this.mailSender = mailSender;
     }
@@ -50,35 +47,35 @@ public class EmailService {
         contactSubmissionRepository.save(contactSubmission);
 
         try {
-
             MimeMessage message = mailSender.createMimeMessage();
-
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
             helper.setTo(request.getEmail());
-
             helper.setFrom(adminEmail);
-
             helper.setReplyTo(request.getEmail());
-
             helper.setSubject(subject);
-
             helper.setText(emailBody, true);
 
             mailSender.send(message);
-        } catch (MessagingException e) {
-            e.printStackTrace();
-        }
+        } catch (Exception ignore) {}
     }
-    public boolean hasMXRecord(String email){
-        try{
-            String domain = email.substring(email.indexOf("@") + 1);
+
+    public boolean hasMXRecord(String email) {
+        if (email == null || !email.contains("@")) {
+            return false;
+        }
+
+        try {
+            String domain = email.substring(email.indexOf("@") + 1).trim();
+            if (domain.isEmpty()) {
+                return false;
+            }
 
             Lookup lookup = new Lookup(domain, Type.MX);
             Record[] records = lookup.run();
 
-            return records.length > 1;
-        } catch (InvalidEmailException | TextParseException e){
+            return records != null && records.length > 0;
+        } catch (TextParseException | IllegalArgumentException e) {
             return false;
         }
     }

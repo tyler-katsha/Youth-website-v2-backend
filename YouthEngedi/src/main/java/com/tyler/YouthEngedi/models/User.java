@@ -32,7 +32,8 @@ import java.util.stream.Collectors;
 @SQLDelete(sql = "UPDATE user SET is_deleted = true WHERE id=?")
 @SQLRestriction("is_deleted = false")
 @Schema(description = "Details about all user information and attributes of a fully implemented")
-public class User implements UserDetails, Serializable {
+public class User implements UserDetails {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Schema(description = "Unique ID for a single user.", example = "1")

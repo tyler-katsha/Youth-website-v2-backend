@@ -8,13 +8,19 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.io.Serial;
+import java.io.Serializable;
 import java.time.LocalDateTime;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class AnnouncementDto {
+public class AnnouncementDto implements Serializable {
+
+    @Serial
+    private static final long serialVersionUID = 1L;
+
     private long id;
     private String title;
     private String message;
@@ -22,5 +28,5 @@ public class AnnouncementDto {
     private AnnouncementType type;
     private String createdAt;
     private String expiresAt;
-    private boolean isUrgent;
+    private Boolean isUrgent;
 }

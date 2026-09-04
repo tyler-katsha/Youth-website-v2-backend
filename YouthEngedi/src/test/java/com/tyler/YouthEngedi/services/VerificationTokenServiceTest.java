@@ -1,6 +1,5 @@
 package com.tyler.YouthEngedi.services;
 
-import com.tyler.YouthEngedi.Exceptions.ResourceNotFoundException;
 import com.tyler.YouthEngedi.Repository.UserRepository;
 import com.tyler.YouthEngedi.Repository.VerificationTokenRepository;
 import com.tyler.YouthEngedi.models.User;
@@ -14,7 +13,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
@@ -35,7 +33,7 @@ class VerificationTokenServiceTest {
     private EmailService emailService;
 
     @InjectMocks
-    private VerificationTokenService verificationTokenService; // this is what we want to test
+    private VerificationTokenService verificationTokenService;
 
     private User testUser;
     private VerificationToken savedToken;

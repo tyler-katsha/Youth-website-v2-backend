@@ -23,11 +23,14 @@ import java.security.Principal;
 
 @RestController
 @RequestMapping("/api/v1")
-@RequiredArgsConstructor
 @Tag(name=" User Management", description = "Api for fetching and managing users")
 public class UserController {
 
     private final UserService userService;
+
+    public UserController(UserService userService){
+        this.userService = userService;
+    }
 
     @PreAuthorize("hasAnyRole('ADMIN','YOUTH_LEADER')")
     @GetMapping("/users")
@@ -118,13 +121,8 @@ public class UserController {
     @ApiResponse(responseCode = "404",description = "User was not found based with there user-id")
     @ApiResponse(responseCode = "400",description = "An error has occurred with the system")
     @ApiResponse(responseCode = "403",description = "Token is not found or expired")
-    public ResponseEntity<ApiResult> deleteAccount(@AuthenticationPrincipal UserPrincipal principal /* uncomment after fixing the issues with the token ,@CookieValue(name="jwt-token") String token */){
+    public ResponseEntity<ApiResult> deleteAccount(@AuthenticationPrincipal UserPrincipal principal){
         try{
-
-//            if(token == null){
-//                return new ResponseEntity<>(new ApiResponse(false,"Access Denied! Token missing!"),HttpStatus.FORBIDDEN);
-//            }
-
             return ResponseEntity.ok(new ApiResult(true, userService.deleteAccount(principal.getUserId())));
         } catch (ResourceNotFoundException e){
             return new ResponseEntity<>(new ApiResult(false,e.getMessage()),HttpStatus.NOT_FOUND);

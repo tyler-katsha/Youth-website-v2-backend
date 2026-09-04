@@ -1,5 +1,6 @@
 package com.tyler.YouthEngedi.configurations;
 
+import com.tyler.YouthEngedi.filters.CustomLogoutHandler;
 import com.tyler.YouthEngedi.filters.JwtAuthenticationFilter;
 import com.tyler.YouthEngedi.models.enums.Role;
 import jakarta.servlet.http.HttpServletResponse;
@@ -21,12 +22,12 @@ import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.authentication.logout.LogoutFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.List;
-import java.util.Set;
 
 @Configuration
 @EnableMethodSecurity
@@ -38,8 +39,12 @@ public class SecurityConfiguration {
 
     @Autowired
     private OAuth2AuthenticationSuccessHandler successHandler;
+
     @Autowired
     private OAuth2FailureHandler failureHandler;
+
+    @Autowired
+    private CustomLogoutHandler customLogoutHandler;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -50,16 +55,19 @@ public class SecurityConfiguration {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS).sessionFixation().none())
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers("/api/v1/auth/**","/oauth2/**","/","/error","/api/v1/email/**","/api/v1/health","/my-docs/**","/my-docs","/api-definitions/**","/v3/api-docs/**","/swagger-ui/index.html","/swagger-ui/**","/api/v1/python/**")
+                        .requestMatchers("/api/v1/auth/logout").authenticated()
+                        .requestMatchers("/actuator/**","/api/v1/auth/**","/oauth2/**","/","/error","/api/v1/email/**","/api/v1/health","/my-docs/**","/my-docs","/api-definitions/**","/v3/api-docs/**","/swagger-ui/index.html","/swagger-ui/**","/api/v1/python/**","/admin-ws/**","/admin-ws")
                         .permitAll()
                         .anyRequest()
                         .authenticated())
                 .oauth2Login(oauth -> oauth.successHandler(successHandler).failureHandler(failureHandler))
                 .logout(logout -> logout
                         .logoutUrl("/api/v1/auth/logout")
+                        .addLogoutHandler(customLogoutHandler)
                         .logoutSuccessHandler(((request, response, authentication) -> response.setStatus(HttpServletResponse.SC_ACCEPTED)))
                         .clearAuthentication(true))
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(jwtAuthenticationFilter, LogoutFilter.class)
                 .build();
     }
 

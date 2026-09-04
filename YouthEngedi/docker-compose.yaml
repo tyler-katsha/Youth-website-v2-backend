@@ -36,26 +36,12 @@ services:
       SPRING_DATASOURCE_USERNAME: ${JDBC_USERNAME}
       SPRING_DATASOURCE_PASSWORD: ${JDBC_PASSWORD}
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_DATA_REDIS_URL: ${REDIS_URL}
     expose:
       - "8080:8080"
     networks:
       - youth-network
-#
-#  nginx:
-#    image: nginx:latest
-#    restart: "unless-stopped"
-#    container_name: nginx
-#    ports:
-#      - "80:80"
-#      - "443:443"
-#    depends_on:
-#      - app
-#    volumes:
-#      - ./nginx/conf.d:/etc/nginx/conf.d
-#      - ./frontend/dist:/usr/share/nginx/html
-#    networks:
-#      - youth-network\
-
+      -
   python:
     build: ../python-api
     container_name: python-api
@@ -63,10 +49,9 @@ services:
       - .env
     restart: unless-stopped
     expose:
-      - "8001:8001"
+      - "8001"
     networks:
       - youth-network
-
 
 networks:
   youth-network:

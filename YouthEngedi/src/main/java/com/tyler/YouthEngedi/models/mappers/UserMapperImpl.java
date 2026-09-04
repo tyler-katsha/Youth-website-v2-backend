@@ -1,7 +1,7 @@
 package com.tyler.YouthEngedi.models.mappers;
 
 import com.tyler.YouthEngedi.models.User;
-import com.tyler.YouthEngedi.models.dtos.UserCache;
+import com.tyler.YouthEngedi.models.dtos.Guest;
 import com.tyler.YouthEngedi.models.dtos.UserProfileResponse;
 import com.tyler.YouthEngedi.models.dtos.UserRegisterRequest;
 import com.tyler.YouthEngedi.models.dtos.UserResponse;
@@ -9,8 +9,8 @@ import com.tyler.YouthEngedi.models.enums.AuthProvider;
 import com.tyler.YouthEngedi.models.enums.Role;
 import org.springframework.stereotype.Component;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Set;
 
 
@@ -53,20 +53,21 @@ public class UserMapperImpl implements UserMapper {
                 .build();
     }
 
-//    @Override
-//    public UserResponse mapToResponse(UserCache existingCacheUser) {
-//        if (existingCacheUser == null) {
-//            return null;
-//        }
-//        return UserResponse.builder().name(existingCacheUser.getName()).dateOfBirth(existingCacheUser.getDateOfBirth()).email(existingCacheUser.getEmail()).roles(existingCacheUser.getRoles()).profileImageUrl(existingCacheUser.getProfileImageUrl()).build();
-//    }
-
     @Override
     public UserProfileResponse mapToProfileResponse(User existingUser) {
         return UserProfileResponse
                 .builder()
                 .bio(existingUser.getBio())
                 .previewUrl(existingUser.getProfileImageUrl())
+                .build();
+    }
+
+    @Override
+    public Guest toGuest(User guestUser) {
+        return Guest.builder()
+                .fakeUserId(guestUser.getId())
+                .fakeEmail(guestUser.getEmail())
+                .createdAt(Instant.now().toEpochMilli())
                 .build();
     }
 }

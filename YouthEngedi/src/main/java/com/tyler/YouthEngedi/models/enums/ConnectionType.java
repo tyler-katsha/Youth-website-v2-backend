@@ -3,7 +3,5 @@ package com.tyler.YouthEngedi.models.enums;
 public enum ConnectionType {
     CONNECT,
     DISCONNECT,
-    REQUEST,
-    TRAFFIC,
-    ERROR
+    CONTINUE_AS_GUEST
 }

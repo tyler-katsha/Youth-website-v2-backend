@@ -17,11 +17,14 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/v1/event")
-@RequiredArgsConstructor
 @Tag(name="Event Management",description = "Api for fetching and managing events")
 public class EventController {
 
     private final EventService eventService;
+
+    public EventController(EventService eventService){
+        this.eventService = eventService;
+    }
 
     @PreAuthorize("hasAnyRole('ADMIN','YOUTH_LEADER')")
     @PostMapping("/addEvent")

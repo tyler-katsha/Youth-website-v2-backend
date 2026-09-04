@@ -1,5 +1,6 @@
 package com.tyler.YouthEngedi.models;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.tyler.YouthEngedi.models.enums.ConnectionType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -17,10 +18,12 @@ import lombok.NoArgsConstructor;
 @Builder
 public class AdminEvent {
 
-    @Enumerated(EnumType.STRING)
-    private ConnectionType type;   // CONNECT, DISCONNECT, REQUEST, TRAFFIC, ERROR
+
     @Id
-    private String userId;
+    private String email;
     private String message;
     private long timestamp;
+    @Enumerated(EnumType.STRING)
+    @JsonProperty("connectionType")
+    private ConnectionType type;   // CONNECT, DISCONNECT, REQUEST, TRAFFIC, ERROR
 }

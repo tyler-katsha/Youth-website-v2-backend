@@ -1,4 +1,9 @@
 package com.tyler.YouthEngedi.models.events;
 
-public class ContinueAsGuestEvent {
-}
+import lombok.*;
+import lombok.experimental.SuperBuilder;
+
+@Getter
+@ToString(callSuper = true)
+@SuperBuilder
+public class ContinueAsGuestEvent extends BaseAuthEvent{}

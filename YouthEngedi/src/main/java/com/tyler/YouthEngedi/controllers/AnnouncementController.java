@@ -15,15 +15,19 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/v1")
-@RequiredArgsConstructor
 @Tag(name="Announcement Management",description = "Api fetching and managing announcements based features")
 public class AnnouncementController {
 
     private final AnnouncementService announcementService;
 
+    public AnnouncementController(AnnouncementService announcementService){
+        this.announcementService = announcementService;
+    }
+
     @GetMapping("/announcements")
     @PreAuthorize("hasAnyRole('ADMIN','YOUTH_LEADER','MEMBER')")
     @Operation(summary = "Finds all the announcements using Pagination",description = "Fetches all the announcements in the database")
+    @ApiResponse(responseCode = "200",description = "Announcement was find successfully")
     @ApiResponse(responseCode = "404",description = "No announcements were found")
     @ApiResponse(responseCode = "500",description = "Something went wrong")
     public ResponseEntity<?> findAllAnnouncements(@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "30") int size){
@@ -32,6 +36,7 @@ public class AnnouncementController {
         } catch (ResourceNotFoundException e){
             return new ResponseEntity<>(new ApiResult(false,"Failed to verify user"),HttpStatus.NOT_FOUND);
         } catch (Exception e){
+            e.printStackTrace();
             return new ResponseEntity<>(new ApiResult(false,"Something went wrong. Please try again later."), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }

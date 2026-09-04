@@ -8,6 +8,7 @@ import com.tyler.YouthEngedi.models.Event;
 import com.tyler.YouthEngedi.models.dtos.AnnouncementDto;
 import com.tyler.YouthEngedi.models.enums.AnnouncementType;
 import com.tyler.YouthEngedi.models.mappers.AnnouncementMapper;
+import com.tyler.YouthEngedi.redis.GenericRedisService;
 import com.tyler.YouthEngedi.utils.TimeUtils;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -37,6 +38,8 @@ class AnnouncementServiceTest {
     private EventRepository eventRepository;
     @Mock
     private AnnouncementMapper announcementMapper;
+    @Mock
+    private GenericRedisService redisService;
     @InjectMocks
     private AnnouncementService announcementService;
 
@@ -59,8 +62,8 @@ class AnnouncementServiceTest {
                 .title("Announcement 1")
                 .message("Test 123")
                 .type(AnnouncementType.ANNOUNCEMENT)
-                .createdAt(TimeUtils.getRemainingTimeText(LocalDateTime.MIN))
-                .expiresAt(TimeUtils.getRemainingTimeText(LocalDateTime.MAX))
+                .createdAt(TimeUtils.formatDateTime(LocalDateTime.MIN))
+                .expiresAt(TimeUtils.formatDateTime(LocalDateTime.MAX))
                 .isUrgent(false)
                 .build();
 
@@ -153,7 +156,7 @@ class AnnouncementServiceTest {
         assertEquals(request.getTitle(), saved.getTitle());
         assertEquals(request.getMessage(), saved.getMessage());
         assertEquals(request.getType(), saved.getType());
-        assertEquals(request.isUrgent(), saved.isUrgent());
+        assertEquals(request.getIsUrgent(), saved.isUrgent());
 
         assertNotNull(saved.getCreatedAt());
         assertNotNull(saved.getExpiresAt());

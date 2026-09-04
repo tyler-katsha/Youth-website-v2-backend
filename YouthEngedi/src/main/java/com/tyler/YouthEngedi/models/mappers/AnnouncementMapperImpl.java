@@ -15,8 +15,8 @@ public class AnnouncementMapperImpl implements AnnouncementMapper{
                 .title(announcement.getTitle())
                 .message(announcement.getMessage())
                 .type(announcement.getType())
-                .createdAt(TimeUtils.getRemainingTimeText(announcement.getCreatedAt()))
-                .expiresAt(TimeUtils.getRemainingTimeText(announcement.getExpiresAt()))
+                .createdAt(TimeUtils.formatDateTime(announcement.getCreatedAt()))
+                .expiresAt(TimeUtils.formatDateTime(announcement.getExpiresAt()))
                 .isUrgent(announcement.isUrgent())
                 .build();
     }
