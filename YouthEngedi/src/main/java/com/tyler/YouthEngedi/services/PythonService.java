@@ -4,7 +4,6 @@ import com.tyler.YouthEngedi.models.dtos.PredictionRequest;
 import com.tyler.YouthEngedi.models.dtos.PredictionResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.client.circuitbreaker.CircuitBreaker;
 import org.springframework.cloud.client.circuitbreaker.CircuitBreakerFactory;
 import org.springframework.http.MediaType;
@@ -20,15 +19,13 @@ import static com.tyler.YouthEngedi.constants.UrlConstants.*;
 @Service
 public class PythonService {
 
-    private static final Logger log = LoggerFactory.getLogger(PythonService.class);
+    private static final Logger logger = LoggerFactory.getLogger(PythonService.class);
 
     private final RestClient restClient;
     private final CircuitBreaker circuitBreaker;
     private final String targetUri;
 
-    public PythonService(
-            CircuitBreakerFactory<?, ?> circuitBreakerFactory,
-            @Value("${app.production:false}") boolean isProduction) {
+    public PythonService(CircuitBreakerFactory<?, ?> circuitBreakerFactory) {
 
         // Enforce strict timeouts so slow requests don't exhaust the Tomcat thread pool
         SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
@@ -40,7 +37,7 @@ public class PythonService {
                 .build();
 
         this.circuitBreaker = circuitBreakerFactory.create("pythonService");
-        this.targetUri = isProduction ? PYTHON_PREDICTION_PROD : PYTHON_PREDICTION_DEV;
+        this.targetUri = production ? PYTHON_PREDICTION_PROD : PYTHON_PREDICTION_DEV;
     }
 
     public PredictionResponse getPrediction(PredictionRequest request) {
@@ -57,7 +54,7 @@ public class PythonService {
     }
 
     private PredictionResponse predictionFallback(Throwable throwable, PredictionRequest request) {
-        log.warn("Python prediction call failed or circuit is open: {}", throwable.getMessage());
+        logger.warn("Python prediction call failed or circuit is open: {}", throwable.getMessage());
 
         // Fail-closed to avoid accidental security/validation exploits during outages
         return PredictionResponse.builder()
