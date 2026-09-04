@@ -1,6 +1,7 @@
 package com.tyler.YouthEngedi.controllers;
 
 import com.tyler.YouthEngedi.Exceptions.ResourceNotFoundException;
+import com.tyler.YouthEngedi.annotations.RateLimited;
 import com.tyler.YouthEngedi.models.dtos.AnnouncementDto;
 import com.tyler.YouthEngedi.models.dtos.ApiResult;
 import com.tyler.YouthEngedi.services.AnnouncementService;
@@ -13,6 +14,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.temporal.ChronoUnit;
+
 @RestController
 @RequestMapping("/api/v1")
 @Tag(name="Announcement Management",description = "Api fetching and managing announcements based features")
@@ -24,8 +27,9 @@ public class AnnouncementController {
         this.announcementService = announcementService;
     }
 
-    @GetMapping("/announcements")
+    @RateLimited(capacity = 100,tokens = 100,duration = 10,unit = ChronoUnit.SECONDS)
     @PreAuthorize("hasAnyRole('ADMIN','YOUTH_LEADER','MEMBER')")
+    @GetMapping("/announcements")
     @Operation(summary = "Finds all the announcements using Pagination",description = "Fetches all the announcements in the database")
     @ApiResponse(responseCode = "200",description = "Announcement was find successfully")
     @ApiResponse(responseCode = "404",description = "No announcements were found")
@@ -36,11 +40,11 @@ public class AnnouncementController {
         } catch (ResourceNotFoundException e){
             return new ResponseEntity<>(new ApiResult(false,"Failed to verify user"),HttpStatus.NOT_FOUND);
         } catch (Exception e){
-            e.printStackTrace();
             return new ResponseEntity<>(new ApiResult(false,"Something went wrong. Please try again later."), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
+    @RateLimited(capacity = 100,tokens = 100,duration = 10,unit = ChronoUnit.SECONDS)
     @GetMapping("/announcements/{id}")
     @PreAuthorize("hasAnyRole('ADMIN','YOUTH_LEADER','MEMBER')")
     @Operation(summary = "Finds a announcement based on the announcement id",description = "Fetches announcement based on there unique ID")
@@ -57,8 +61,9 @@ public class AnnouncementController {
         }
     }
 
-    @PostMapping("/announcements")
+    @RateLimited(capacity = 100,tokens = 100,duration = 10,unit = ChronoUnit.SECONDS)
     @PreAuthorize("hasAnyRole('ADMIN','YOUTH_LEADER')")
+    @PostMapping("/announcements")
     @Operation(summary = "Creates an announcement",description = "Creates an announcement and receives partially data from the frontend")
     @ApiResponse(responseCode = "200",description = "Successfully adds an announcement into the database")
     @ApiResponse(responseCode = "500",description = "Something went wrong")
@@ -70,9 +75,9 @@ public class AnnouncementController {
             return new ResponseEntity<>(new ApiResult(false,"Something went wrong. Please try again later."), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
-
-    @PutMapping("/announcements")
+    @RateLimited(capacity = 100,tokens = 100,duration = 10,unit = ChronoUnit.SECONDS)
     @PreAuthorize("hasAnyRole('ADMIN','YOUTH_LEADER')")
+    @PutMapping("/announcements")
     @Operation(summary = "Updates an existing announcement",description = "Updates an existing announcement with new data and replaces the old data")
     @ApiResponse(responseCode = "200",description = "Successfully updates existing announcement with new data")
     @ApiResponse(responseCode = "404",description = "Announcement not found based on id")
@@ -88,6 +93,7 @@ public class AnnouncementController {
         }
     }
 
+    @RateLimited(capacity = 100,tokens = 100,duration = 10,unit = ChronoUnit.SECONDS)
     @DeleteMapping("/announcements/{id}")
     @PreAuthorize("hasAnyRole('ADMIN','YOUTH_LEADER')")
     @Operation(summary = "Delete an announcement by id",description = "Delete an announcement based on it's id")
@@ -110,6 +116,6 @@ public class AnnouncementController {
 //    public ResponseEntity<String> TempControllerMethod(){
 //        announcementService.tempMethod();
 //
-//        return ResponseEntity.ok("Successfully excuted temp method");
+//        return ResponseEntity.ok("Successfully executed temp method");
 //    }
 }

@@ -1,5 +1,6 @@
 package com.tyler.YouthEngedi.controllers;
 
+import com.tyler.YouthEngedi.annotations.RateLimited;
 import com.tyler.YouthEngedi.models.dtos.PredictionRequest;
 import com.tyler.YouthEngedi.models.dtos.PredictionResponse;
 import com.tyler.YouthEngedi.services.PythonService;
@@ -11,6 +12,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 @RestController
@@ -23,6 +25,8 @@ public class PythonController {
         this.pythonService = pythonService;
     }
 
+
+    @RateLimited(unit = ChronoUnit.MINUTES)
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/predict")
     @Operation(summary = "Get's a prediction score from python",description = "Returns a prediction using Python ML model")

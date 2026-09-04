@@ -1,4 +1,4 @@
-package com.tyler.YouthEngedi.AOP;
+package com.tyler.YouthEngedi.Aspect;
 
 import com.tyler.YouthEngedi.Repository.PerformanceRepository;
 import com.tyler.YouthEngedi.annotations.LogExecutionTime;

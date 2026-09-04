@@ -3,6 +3,7 @@ package com.tyler.YouthEngedi.controllers;
 import com.tyler.YouthEngedi.Exceptions.ExplicitContentException;
 import com.tyler.YouthEngedi.Exceptions.ImageException;
 import com.tyler.YouthEngedi.Exceptions.ResourceNotFoundException;
+import com.tyler.YouthEngedi.annotations.RateLimited;
 import com.tyler.YouthEngedi.models.UserPrincipal;
 import com.tyler.YouthEngedi.models.dtos.ApiResult;
 import com.tyler.YouthEngedi.models.dtos.FragmentedImage;
@@ -19,6 +20,8 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.temporal.ChronoUnit;
+
 @RestController
 @RequestMapping("/api/v1")
 @Tag(name="Image Management",description = "Api for fetching and managing images")
@@ -30,6 +33,7 @@ public class ImageController {
         this.imageService = imageService;
     }
 
+    @RateLimited(capacity = 100,tokens = 100,duration = 10,unit = ChronoUnit.SECONDS)
     @PreAuthorize("hasAnyRole('ADMIN','MEMBER','YOUTH_LEADER')")
     @GetMapping("/images")
     @Operation(summary = "Fetches all image objects using Pagination",description = "Fetches all the image objects in the database")
@@ -46,6 +50,7 @@ public class ImageController {
          }
     }
 
+    @RateLimited(capacity = 100,tokens = 100,duration = 10,unit = ChronoUnit.SECONDS)
     @PreAuthorize("hasAnyRole('ADMIN','MEMBER','YOUTH_LEADER')")
     @PostMapping(value="/images/upload",consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "uploads image into Object Storage")
@@ -65,6 +70,7 @@ public class ImageController {
         }
     }
 
+    @RateLimited(capacity = 100,tokens = 100,duration = 10,unit = ChronoUnit.SECONDS)
     @PreAuthorize("hasAnyRole('ADMIN','MEMBER','YOUTH_LEADER')")
     @PostMapping(value="/images/upload-chunks",consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "Split image into fragments and uploads it into Object Storage")
@@ -82,6 +88,7 @@ public class ImageController {
         }
     }
 
+    @RateLimited(capacity = 100,tokens = 100,duration = 10,unit = ChronoUnit.SECONDS)
     @PreAuthorize("hasAnyRole('ADMIN','MEMBER','YOUTH_LEADER')")
     @DeleteMapping("/images/{id}")
     @Operation(summary = "Deletes image based on id")

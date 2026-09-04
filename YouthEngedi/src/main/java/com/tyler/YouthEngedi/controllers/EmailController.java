@@ -3,6 +3,7 @@ package com.tyler.YouthEngedi.controllers;
 import com.tyler.YouthEngedi.Exceptions.PasswordResetException;
 import com.tyler.YouthEngedi.Exceptions.ResourceNotFoundException;
 import com.tyler.YouthEngedi.Repository.UserRepository;
+import com.tyler.YouthEngedi.annotations.RateLimited;
 import com.tyler.YouthEngedi.jwts.JwtTokenProvider;
 import com.tyler.YouthEngedi.models.User;
 import com.tyler.YouthEngedi.models.dtos.ApiResult;
@@ -21,6 +22,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.time.temporal.ChronoUnit;
 import java.util.concurrent.CompletableFuture;
 
 import static com.tyler.YouthEngedi.constants.UrlConstants.*;
@@ -37,6 +39,7 @@ public class EmailController {
     private final UserRepository userRepository;
     private final JwtTokenProvider jwtTokenProvider;
 
+    @RateLimited(capacity = 5,tokens = 5,unit = ChronoUnit.MINUTES)
     @PostMapping("/send-email")
     @Operation(summary = "Sends a email to the developer for an inquiry")
     @ApiResponse(responseCode = "200",description = "Send's a confirmation message back to the user")
@@ -52,6 +55,7 @@ public class EmailController {
         }
     }
 
+    @RateLimited(capacity = 5,tokens = 5,unit = ChronoUnit.MINUTES)
     @PostMapping("/reset-password")
     @Operation(summary = "Send a partial request of the user that want's to reset there password")
     @ApiResponse(responseCode = "200",description = "The url is sent back to the user successfully")
@@ -64,15 +68,6 @@ public class EmailController {
 
             User user = userRepository.findByEmail(request.getEmail()).orElseThrow(() -> new ResourceNotFoundException("User doesn't exist"));
             String token = jwtTokenProvider.generateToken(user);
-
-//            PasswordResetRequest fullRequest = PasswordResetRequest.builder().token(token).email(request.getEmail()).build();
-//            CompletableFuture.runAsync(() -> {
-//                try{
-//                    emailService.sendEmail(fullRequest);
-//                } catch (MessagingException e){
-//                    e.printStackTrace();
-//                }
-//            });
 
             String url = String.format(production ? FRONTEND_RESET_PASSWORD_PROD : FRONTEND_RESET_PASSWORD_DEV, token,request.getEmail());
             return ResponseEntity.ok(url);
@@ -87,6 +82,7 @@ public class EmailController {
             return new ResponseEntity<>(new ApiResult(false,"Something went wrong. Please try again later."),HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+//    @RateLimited(capacity = 5,tokens = 5,unit = ChronoUnit.MINUTES)
 //    @PostMapping("/resend-verification")
 //    public ResponseEntity<?> resendVerification(String email){
 //        verificationTokenService.resendVerification(email);

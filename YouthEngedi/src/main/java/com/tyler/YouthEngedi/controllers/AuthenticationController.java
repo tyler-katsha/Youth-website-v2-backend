@@ -2,6 +2,7 @@ package com.tyler.YouthEngedi.controllers;
 
 import com.tyler.YouthEngedi.Exceptions.*;
 import com.tyler.YouthEngedi.Repository.VerificationTokenRepository;
+import com.tyler.YouthEngedi.annotations.RateLimited;
 import com.tyler.YouthEngedi.models.PasswordResetRequest;
 import com.tyler.YouthEngedi.models.User;
 import com.tyler.YouthEngedi.models.UserPrincipal;
@@ -23,6 +24,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.concurrent.CompletableFuture;
 
 @RestController
@@ -40,6 +42,7 @@ public class AuthenticationController {
         this.verificationTokenRepository = verificationTokenRepository;
     }
 
+    @RateLimited(capacity = 5,tokens = 5,unit = ChronoUnit.MINUTES)
     @PostMapping(value="/register", consumes=MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "Registers user to the system")
     @ApiResponse(responseCode = "201",description = "Successful creates user")
@@ -72,6 +75,7 @@ public class AuthenticationController {
         }
     }
 
+    @RateLimited(capacity = 5,tokens = 5,unit = ChronoUnit.MINUTES)
     @PostMapping("/login")
     @Operation(summary = "Log user into the system")
     @ApiResponse(responseCode = "200",description = "Successful login user")
@@ -96,6 +100,7 @@ public class AuthenticationController {
         }
     }
 
+    @RateLimited(capacity = 5,tokens = 5,unit = ChronoUnit.MINUTES)
     @PostMapping("/continue-as-guest")
     @Operation(summary = "Login as guest",description = "Creates a shorten version of a token to allow this type of user to access limited features")
     @ApiResponse(responseCode = "200",description = "Successful continue as guest")
@@ -111,6 +116,7 @@ public class AuthenticationController {
         }
     }
 
+    @RateLimited(capacity = 5,tokens = 5,unit = ChronoUnit.MINUTES)
     @PostMapping("/guest/redirect")
     @Operation(summary = "Redirect guest to login page",description = "Redirects guest to the login page where they can create a account or login")
     @ApiResponse(responseCode = "200",description = "Successful redirects guest")
@@ -119,6 +125,7 @@ public class AuthenticationController {
         return ResponseEntity.ok().build();
     }
 
+    @RateLimited(capacity = 5,tokens = 5,unit = ChronoUnit.MINUTES)
     @GetMapping("/verify")
     @Operation(summary = "Display's a Verification Page", description = "Display whether the user is successfully verified or failed to verify and enable the user's account")
     @ApiResponse(responseCode = "200",description = "User is verified successfully")
@@ -153,6 +160,7 @@ public class AuthenticationController {
         }
     }
 
+    @RateLimited(capacity = 5,tokens = 5,unit = ChronoUnit.MINUTES)
     @PostMapping("/forgot-password")
     @Operation(summary = "Resets the user password",description = "Resets the user old password and adds the new one to the database")
     @ApiResponse(responseCode = "200",description = "Password is reset successfully")

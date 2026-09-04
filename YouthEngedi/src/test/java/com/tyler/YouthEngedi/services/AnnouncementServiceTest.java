@@ -38,8 +38,6 @@ class AnnouncementServiceTest {
     private EventRepository eventRepository;
     @Mock
     private AnnouncementMapper announcementMapper;
-    @Mock
-    private GenericRedisService redisService;
     @InjectMocks
     private AnnouncementService announcementService;
 

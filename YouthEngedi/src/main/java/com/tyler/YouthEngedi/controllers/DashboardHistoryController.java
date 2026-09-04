@@ -1,5 +1,6 @@
 package com.tyler.YouthEngedi.controllers;
 
+import com.tyler.YouthEngedi.annotations.RateLimited;
 import com.tyler.YouthEngedi.models.events.EventBufferStats;
 import com.tyler.YouthEngedi.services.DashboardHistoryService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -12,6 +13,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.time.temporal.ChronoUnit;
+
 @RestController
 @RequestMapping("/api/v1/dashboard")
 @Tag(name = "Dashboard History Management", description = "Api for fetching recent event logs for user activity")
@@ -23,6 +26,7 @@ public class DashboardHistoryController {
         this.historyService = historyService;
     }
 
+    @RateLimited(unit = ChronoUnit.MINUTES)
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/recent")
     @Operation(summary = "Gets recent events",description = "Gets events such as user logged in and logged out for now")
@@ -36,6 +40,7 @@ public class DashboardHistoryController {
         }
     }
 
+    @RateLimited(unit = ChronoUnit.MINUTES)
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/stats")
     @Operation(summary = "Gets the size of the buffer of users and the max length of the buffer",description = "Gets the amount of user's currently online")

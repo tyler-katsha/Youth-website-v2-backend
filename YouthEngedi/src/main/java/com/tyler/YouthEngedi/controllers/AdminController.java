@@ -1,6 +1,7 @@
 package com.tyler.YouthEngedi.controllers;
 
 import com.tyler.YouthEngedi.Exceptions.ResourceNotFoundException;
+import com.tyler.YouthEngedi.annotations.RateLimited;
 import com.tyler.YouthEngedi.models.AuditLog;
 import com.tyler.YouthEngedi.models.Performance;
 import com.tyler.YouthEngedi.models.dtos.ApiResult;
@@ -15,6 +16,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.temporal.ChronoUnit;
+
 @RestController
 @RequestMapping("/api/v1/admin")
 @Tag(name="Admin Management",description = "Api fetching and managing admin based features strictly")
@@ -26,6 +29,7 @@ public class AdminController {
         this.adminService = adminService;
     }
 
+    @RateLimited(capacity = 100,tokens = 100,duration = 10,unit = ChronoUnit.SECONDS)
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/logs")
     @Operation(summary = "Finds all the system logs using Pagination",description = "Fetches all the logs in the database")
@@ -39,6 +43,7 @@ public class AdminController {
         }
     }
 
+    @RateLimited(capacity = 100,tokens = 100,duration = 10,unit = ChronoUnit.SECONDS)
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/performances")
     @Operation(summary = "Finds all the system performance data using Pagination",description = "Fetches all the performances data in the database")

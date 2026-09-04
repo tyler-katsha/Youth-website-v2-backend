@@ -1,6 +1,7 @@
 package com.tyler.YouthEngedi.controllers;
 
 import com.tyler.YouthEngedi.Exceptions.ResourceNotFoundException;
+import com.tyler.YouthEngedi.annotations.RateLimited;
 import com.tyler.YouthEngedi.models.UserPrincipal;
 import com.tyler.YouthEngedi.models.dtos.ApiResult;
 import com.tyler.YouthEngedi.models.dtos.EventRequest;
@@ -15,6 +16,8 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.temporal.ChronoUnit;
+
 @RestController
 @RequestMapping("/api/v1/event")
 @Tag(name="Event Management",description = "Api for fetching and managing events")
@@ -26,6 +29,7 @@ public class EventController {
         this.eventService = eventService;
     }
 
+    @RateLimited(unit = ChronoUnit.MINUTES)
     @PreAuthorize("hasAnyRole('ADMIN','YOUTH_LEADER')")
     @PostMapping("/addEvent")
     @Operation(summary = "Creates an event",description = "Creates an event and receives partially data from the frontend")
@@ -39,6 +43,7 @@ public class EventController {
         }
     }
 
+    @RateLimited(unit = ChronoUnit.MINUTES)
     @PreAuthorize("hasAnyRole('ADMIN','MEMBER','YOUTH_LEADER')")
     @GetMapping("/events")
     @Operation(summary = "Gets all the events")
@@ -54,6 +59,8 @@ public class EventController {
             return new ResponseEntity<>(new ApiResult(false,"Something went wrong. Please try again later."),HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+
+    @RateLimited(unit = ChronoUnit.MINUTES)
     @PreAuthorize("hasAnyRole('ADMIN','MEMBER','YOUTH_LEADER')")
     @GetMapping("/events/{date}")
     @Operation(summary = "Get event based on the current date")
@@ -70,6 +77,7 @@ public class EventController {
         }
     }
 
+    @RateLimited(unit = ChronoUnit.MINUTES)
     @PreAuthorize("hasAnyRole('ADMIN','YOUTH_LEADER')")
     @DeleteMapping("/events/{eventId}")
     @Operation(summary = "Deletes an event based on the event id")
@@ -86,6 +94,7 @@ public class EventController {
         }
     }
 
+    @RateLimited(unit = ChronoUnit.MINUTES)
     @PreAuthorize("hasAnyRole('ADMIN','YOUTH_LEADER')")
     @PutMapping("/events/{eventId}")
     @Operation(summary = "Updates existing event",description = "Updates the existing event data with new data")
