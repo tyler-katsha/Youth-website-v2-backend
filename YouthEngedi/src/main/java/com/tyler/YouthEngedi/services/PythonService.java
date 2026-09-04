@@ -2,13 +2,17 @@ package com.tyler.YouthEngedi.services;
 
 import com.tyler.YouthEngedi.models.dtos.PredictionRequest;
 import com.tyler.YouthEngedi.models.dtos.PredictionResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cloud.client.circuitbreaker.CircuitBreaker;
 import org.springframework.cloud.client.circuitbreaker.CircuitBreakerFactory;
 import org.springframework.http.MediaType;
-import org.springframework.resilience.annotation.Retryable;
-import org.springframework.retry.annotation.Recover;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
-import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.client.RestClient;
 
+import java.time.Duration;
 import java.util.List;
 
 import static com.tyler.YouthEngedi.constants.UrlConstants.*;
@@ -16,32 +20,48 @@ import static com.tyler.YouthEngedi.constants.UrlConstants.*;
 @Service
 public class PythonService {
 
-    private final CircuitBreakerFactory<?,?> circuitBreakerFactory;
-    private final WebClient webClient;
+    private static final Logger log = LoggerFactory.getLogger(PythonService.class);
 
-    public PythonService(WebClient webClient,CircuitBreakerFactory<?,?> circuitBreakerFactory){
-        this.webClient = webClient;
-        this.circuitBreakerFactory = circuitBreakerFactory;
+    private final RestClient restClient;
+    private final CircuitBreaker circuitBreaker;
+    private final String targetUri;
+
+    public PythonService(
+            CircuitBreakerFactory<?, ?> circuitBreakerFactory,
+            @Value("${app.production:false}") boolean isProduction) {
+
+        // Enforce strict timeouts so slow requests don't exhaust the Tomcat thread pool
+        SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
+        requestFactory.setConnectTimeout(Duration.ofMillis(1000));
+        requestFactory.setReadTimeout(Duration.ofMillis(2000));
+
+        this.restClient = RestClient.builder()
+                .requestFactory(requestFactory)
+                .build();
+
+        this.circuitBreaker = circuitBreakerFactory.create("pythonService");
+        this.targetUri = isProduction ? PYTHON_PREDICTION_PROD : PYTHON_PREDICTION_DEV;
     }
 
-    @Retryable(maxRetries = 3,delay = 1000,multiplier = 2,includes = {Exception.class})
-    public PredictionResponse getPrediction(PredictionRequest request){
+    public PredictionResponse getPrediction(PredictionRequest request) {
+        return circuitBreaker.run(
+                () -> restClient.post()
+                        .uri(targetUri)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .body(request)
+                        .retrieve()
+                        .body(PredictionResponse.class),
 
-        var circuitBreaker = circuitBreakerFactory.create("pythonService");
-
-        return circuitBreaker.run(() -> webClient.post()
-                .uri(production ? PYTHON_PREDICTION_PROD : PYTHON_PREDICTION_DEV)
-                .contentType(MediaType.APPLICATION_JSON)
-                .bodyValue(request)
-                .retrieve()
-                .bodyToMono(PredictionResponse.class)
-                .block());
+                throwable -> predictionFallback(throwable, request)
+        );
     }
 
-    @Recover
-    public PredictionResponse predictionFallback(Throwable throwable,PredictionRequest request){
+    private PredictionResponse predictionFallback(Throwable throwable, PredictionRequest request) {
+        log.warn("Python prediction call failed or circuit is open: {}", throwable.getMessage());
+
+        // Fail-closed to avoid accidental security/validation exploits during outages
         return PredictionResponse.builder()
-                .approved(true)
+                .approved(false)
                 .detections(List.of())
                 .build();
     }
