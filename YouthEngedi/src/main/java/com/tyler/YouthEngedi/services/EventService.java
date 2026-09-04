@@ -8,6 +8,7 @@ import com.tyler.YouthEngedi.Repository.UserRepository;
 import com.tyler.YouthEngedi.models.Announcement;
 import com.tyler.YouthEngedi.models.Event;
 import com.tyler.YouthEngedi.models.User;
+import com.tyler.YouthEngedi.models.dtos.CachedPageResponse;
 import com.tyler.YouthEngedi.models.dtos.EventRequest;
 import com.tyler.YouthEngedi.models.dtos.EventResponse;
 import com.tyler.YouthEngedi.models.enums.AnnouncementType;
@@ -15,6 +16,10 @@ import com.tyler.YouthEngedi.models.enums.EventType;
 import com.tyler.YouthEngedi.models.mappers.EventMapper;
 import com.tyler.YouthEngedi.redis.GenericRedisService;
 import com.tyler.YouthEngedi.utils.TimeUtils;
+import jakarta.transaction.Transactional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
@@ -31,9 +36,10 @@ public class EventService {
     private final EventMapper eventMapper;
     private final GenericRedisService redisService;
 
-    private final static String EVENT_ALL_KEY = "events:all";
+    private static final String EVENT_PAGE_KEY_PREFIX = "events:page:";
     private static final String EVENT_ID_KEY_PREFIX = "event:id:";
     private final static Duration EVENT_CACHE_TTL = Duration.ofHours(1);
+    private static final Duration PAGE_CACHE_TTL = Duration.ofMinutes(15);
 
     public EventService(EventRepository eventRepository,UserRepository userRepository,AnnouncementRepository announcementRepository,EventMapper mapper,GenericRedisService redisService){
         this.announcementRepository = announcementRepository;
@@ -74,7 +80,7 @@ public class EventService {
 
         announcementRepository.save(announcement);
 
-        redisService.delete(EVENT_ALL_KEY);
+        redisService.deleteByPattern(EVENT_PAGE_KEY_PREFIX + "*");
 
         return eventMapper.mapToEventResponse(event);
     }
@@ -89,24 +95,32 @@ public class EventService {
                 .toList();
     }
 
+    @Transactional
     public String removeEvent(long eventId) {
 
-        Event existingEvent = eventRepository.findById(eventId)
-                .orElseThrow(() -> new ResourceNotFoundException("Event not found"));
-
-        eventRepository.delete(existingEvent);
+        var cacheKey = EVENT_ID_KEY_PREFIX + eventId;
 
         Announcement existingAnnouncement = announcementRepository.findByEvent_EventId(eventId)
                 .orElseThrow(() -> new EventException("Event is not found or does not exist"));
 
         announcementRepository.delete(existingAnnouncement);
 
-        redisService.delete(EVENT_ALL_KEY);
+        Event existingEvent = eventRepository.findById(eventId)
+                .orElseThrow(() -> new ResourceNotFoundException("Event not found"));
+
+        eventRepository.delete(existingEvent);
+
+
+
+        redisService.deleteByPattern(EVENT_PAGE_KEY_PREFIX + "*");
+        redisService.delete(cacheKey);
 
         return "Event Deleted Successfully";
     }
 
     public EventResponse updateEvent(long eventId,EventRequest request,long userId) {
+
+        var cacheKey = EVENT_ID_KEY_PREFIX + eventId;
 
         Event existingEvent = eventRepository.findById(eventId)
                 .orElseThrow(() -> new ResourceNotFoundException("Event not found"));
@@ -130,17 +144,31 @@ public class EventService {
         existingAnnouncement.setTitle(existingAnnouncement.getTitle());
         existingAnnouncement.setExpiresAt(TimeUtils.getExpiresAt(existingEvent.getEventDate()));
 
-        redisService.delete(EVENT_ALL_KEY);
+        redisService.deleteByPattern(EVENT_PAGE_KEY_PREFIX + "*");
+        redisService.delete(cacheKey);
 
         return eventMapper.mapToEventResponse(existingEvent);
     }
 
-    public List<EventResponse> findAllEvents() {
+    public Page<EventResponse> findAllEvents(int page, int size) {
 
-        return eventRepository.findAll()
-                .stream()
-                .map(eventMapper::mapToEventResponse)
-                .toList();
+        String cacheKey = EVENT_PAGE_KEY_PREFIX + page + ":size:" + size;
+
+        var cached = redisService.get(cacheKey, CachedPageResponse.class);
+
+        if (cached.isPresent()) {
+            return cached.get().toPage();
+        }
+
+        var pageable = PageRequest.of(page,size);
+
+        var eventPage = eventRepository.findAll(pageable).map(eventMapper::mapToEventResponse);
+
+        var responseToCache = CachedPageResponse.of(eventPage);
+
+        redisService.set(cacheKey, responseToCache, PAGE_CACHE_TTL);
+
+        return eventPage;
     }
 
 

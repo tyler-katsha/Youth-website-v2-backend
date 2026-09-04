@@ -8,6 +8,7 @@ import com.tyler.YouthEngedi.Repository.UserRepository;
 import com.tyler.YouthEngedi.models.Announcement;
 import com.tyler.YouthEngedi.models.Event;
 import com.tyler.YouthEngedi.models.User;
+import com.tyler.YouthEngedi.models.dtos.CachedPageResponse;
 import com.tyler.YouthEngedi.models.dtos.EventRequest;
 import com.tyler.YouthEngedi.models.dtos.EventResponse;
 import com.tyler.YouthEngedi.models.enums.AnnouncementType;
@@ -23,6 +24,10 @@ import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 import java.time.Duration;
 import java.time.LocalDate;
@@ -302,47 +307,63 @@ class EventServiceTest {
     }
 
     @Nested
-    @DisplayName("findAllEvents Tests")
+    @DisplayName("findAllEvents (Paginated) Tests")
     class FindAllEventsTests {
 
+        private static final String EVENT_PAGE_KEY_PREFIX = "events:page:";
+        private static final Duration PAGE_CACHE_TTL = Duration.ofMinutes(15);
+
         @Test
-        @DisplayName("Should return cached events and skip database query when cache is hit")
+        @DisplayName("Should return cached page and skip database query when cache is hit")
         void findAllEvents_CacheHit() {
-            List<EventResponse> cachedEvents = List.of(
+            int page = 0;
+            int size = 20;
+            String expectedKey = EVENT_PAGE_KEY_PREFIX + page + ":size:" + size;
+
+            List<EventResponse> content = List.of(
                     EventResponse.builder().title("Cached Event 1").build(),
                     EventResponse.builder().title("Cached Event 2").build()
             );
+            Page<EventResponse> expectedPage = new PageImpl<>(content, PageRequest.of(page, size), 2);
 
-            when(redisService.getListValue(EVENT_ALL_KEY, EventResponse.class))
-                    .thenReturn(Optional.of(cachedEvents));
+            CachedPageResponse cachedResponse = mock(CachedPageResponse.class);
+            when(cachedResponse.toPage()).thenReturn(expectedPage);
+            when(redisService.get(expectedKey, CachedPageResponse.class))
+                    .thenReturn(Optional.of(cachedResponse));
 
-            List<EventResponse> result = eventService.findAllEvents();
+            Page<EventResponse> result = eventService.findAllEvents(page, size);
 
-            assertEquals(2, result.size());
-            assertEquals("Cached Event 1", result.get(0).getTitle());
+            assertEquals(2, result.getTotalElements());
+            assertEquals("Cached Event 1", result.getContent().get(0).getTitle());
             verifyNoInteractions(eventRepository, eventMapper);
             verify(redisService, never()).set(anyString(), any(), any());
         }
 
         @Test
-        @DisplayName("Should fetch from DB, map, store into cache, and return list when cache misses")
+        @DisplayName("Should fetch from DB pageable, map, store into cache, and return page when cache misses")
         void findAllEvents_CacheMiss() {
+            int page = 0;
+            int size = 20;
+            String expectedKey = EVENT_PAGE_KEY_PREFIX + page + ":size:" + size;
+            Pageable pageable = PageRequest.of(page, size);
+
             Event event1 = Event.builder().title("DB Event 1").build();
             EventResponse response1 = EventResponse.builder().title("DB Event 1").build();
+            Page<Event> dbPage = new PageImpl<>(List.of(event1), pageable, 1);
 
-            when(redisService.getListValue(EVENT_ALL_KEY, EventResponse.class))
+            when(redisService.get(expectedKey, CachedPageResponse.class))
                     .thenReturn(Optional.empty());
-            when(eventRepository.findAll()).thenReturn(List.of(event1));
+            when(eventRepository.findAll(pageable)).thenReturn(dbPage);
             when(eventMapper.mapToEventResponse(event1)).thenReturn(response1);
 
-            List<EventResponse> result = eventService.findAllEvents();
+            Page<EventResponse> result = eventService.findAllEvents(page, size);
 
-            assertEquals(1, result.size());
-            assertEquals("DB Event 1", result.get(0).getTitle());
+            assertEquals(1, result.getTotalElements());
+            assertEquals("DB Event 1", result.getContent().get(0).getTitle());
 
-            verify(eventRepository).findAll();
+            verify(eventRepository).findAll(pageable);
             verify(eventMapper).mapToEventResponse(event1);
-            verify(redisService).set(eq(EVENT_ALL_KEY), eq(List.of(response1)), eq(Duration.ofHours(1)));
+            verify(redisService).set(eq(expectedKey), any(), eq(PAGE_CACHE_TTL));
         }
     }
 }

@@ -53,15 +53,14 @@ public class EventController {
     @ApiResponse(responseCode = "200",description = "Successfully fetches all events")
     @ApiResponse(responseCode = "404",description = "No events were found")
     @ApiResponse(responseCode = "500",description = "Something went wrong")
-    public ResponseEntity<?> findAllEvents(){
+    public ResponseEntity<?> findAllEvents(@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "100") int size){
         try{
-            return ResponseEntity.ok(eventService.findAllEvents());
+            return ResponseEntity.ok(eventService.findAllEvents(page,size));
         } catch (ResourceNotFoundException e){
             return new ResponseEntity<>(new ApiResult(false,e.getMessage()),HttpStatus.NOT_FOUND);
         } catch (RateLimitExceededException e){
             return new ResponseEntity<>(new ApiResult(false,e.getMessage()),HttpStatus.TOO_MANY_REQUESTS);
         } catch (Exception e){
-            e.printStackTrace();
             return new ResponseEntity<>(new ApiResult(false,"Something went wrong. Please try again later."),HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
