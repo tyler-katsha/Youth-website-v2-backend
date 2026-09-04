@@ -36,6 +36,19 @@ public class TlsFingerprintFilter extends OncePerRequestFilter {
         var ja3 = request.getHeader(JA3_HEADER);
         var userAgent = request.getHeader("User-Agent");
 
+        var path = request.getRequestURI();
+        var remoteAddr = request.getRemoteAddr();
+
+        if (path.startsWith("/actuator")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
+        if (remoteAddr.startsWith("10.") || remoteAddr.startsWith("127.") || "0:0:0:0:0:0:0:1".equals(remoteAddr)) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         if(ja3== null || ja3.isBlank()){
             logger.warn("Missing {} header. Direct connection attempt from IP. {}",JA3_HEADER,request.getRemoteAddr());
             filterChain.doFilter(request,response);
