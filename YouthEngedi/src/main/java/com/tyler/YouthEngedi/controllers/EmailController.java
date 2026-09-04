@@ -1,6 +1,7 @@
 package com.tyler.YouthEngedi.controllers;
 
 import com.tyler.YouthEngedi.Exceptions.PasswordResetException;
+import com.tyler.YouthEngedi.Exceptions.RateLimitExceededException;
 import com.tyler.YouthEngedi.Exceptions.ResourceNotFoundException;
 import com.tyler.YouthEngedi.Repository.UserRepository;
 import com.tyler.YouthEngedi.annotations.RateLimited;
@@ -50,6 +51,8 @@ public class EmailController {
                 emailService.sendEmail(request);
             });
             return ResponseEntity.ok("Email sent.");
+        } catch (RateLimitExceededException e){
+            return new ResponseEntity<>(new ApiResult(false,"Something went wrong. Please try again later."),HttpStatus.TOO_MANY_REQUESTS);
         } catch (Exception e){
             return new ResponseEntity<>(new ApiResult(false,"Something went wrong. Please try again later."),HttpStatus.INTERNAL_SERVER_ERROR);
         }
@@ -78,6 +81,8 @@ public class EmailController {
             return new ResponseEntity<>(new ApiResult(false,e.getMessage()),HttpStatus.FORBIDDEN);
         } catch(ExpiredJwtException e){
             return new ResponseEntity<>(new ApiResult(false,"Token is expired"),HttpStatus.UNAUTHORIZED);
+        } catch (RateLimitExceededException e){
+            return new ResponseEntity<>(new ApiResult(false,"Something went wrong. Please try again later."),HttpStatus.TOO_MANY_REQUESTS);
         } catch (Exception e){
             return new ResponseEntity<>(new ApiResult(false,"Something went wrong. Please try again later."),HttpStatus.INTERNAL_SERVER_ERROR);
         }

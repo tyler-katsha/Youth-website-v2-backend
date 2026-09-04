@@ -21,7 +21,7 @@ public class AnnouncementDto implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
 
-    private long id;
+    private Long id;
     private String title;
     private String message;
     @Enumerated(EnumType.STRING)

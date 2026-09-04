@@ -1,5 +1,6 @@
 package com.tyler.YouthEngedi.controllers;
 
+import com.tyler.YouthEngedi.Exceptions.RateLimitExceededException;
 import com.tyler.YouthEngedi.Exceptions.ResourceNotFoundException;
 import com.tyler.YouthEngedi.annotations.RateLimited;
 import com.tyler.YouthEngedi.models.UserPrincipal;
@@ -38,6 +39,8 @@ public class EventController {
     public ResponseEntity<?> createEvent(@RequestBody EventRequest request, @AuthenticationPrincipal UserPrincipal principal){
         try{
             return ResponseEntity.ok(eventService.createEvent(request,principal.getUserId()));
+        } catch (RateLimitExceededException e){
+            return new ResponseEntity<>(new ApiResult(false,e.getMessage()),HttpStatus.TOO_MANY_REQUESTS);
         } catch (Exception e){
             return new ResponseEntity<>(new ApiResult(false,"Something went wrong. Please try again later."),HttpStatus.BAD_REQUEST);
         }
@@ -55,7 +58,10 @@ public class EventController {
             return ResponseEntity.ok(eventService.findAllEvents());
         } catch (ResourceNotFoundException e){
             return new ResponseEntity<>(new ApiResult(false,e.getMessage()),HttpStatus.NOT_FOUND);
+        } catch (RateLimitExceededException e){
+            return new ResponseEntity<>(new ApiResult(false,e.getMessage()),HttpStatus.TOO_MANY_REQUESTS);
         } catch (Exception e){
+            e.printStackTrace();
             return new ResponseEntity<>(new ApiResult(false,"Something went wrong. Please try again later."),HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
@@ -72,6 +78,8 @@ public class EventController {
             return ResponseEntity.ok(eventService.getEventsByDate(date));
         } catch (ResourceNotFoundException e){
             return new ResponseEntity<>(new ApiResult(false,e.getMessage()),HttpStatus.NOT_FOUND);
+        } catch (RateLimitExceededException e){
+            return new ResponseEntity<>(new ApiResult(false,e.getMessage()),HttpStatus.TOO_MANY_REQUESTS);
         } catch (Exception e){
             return new ResponseEntity<>(new ApiResult(false,"Something went wrong. Please try again later."),HttpStatus.INTERNAL_SERVER_ERROR);
         }
@@ -89,6 +97,8 @@ public class EventController {
             return ResponseEntity.ok(new ApiResult(true,eventService.removeEvent(eventId)));
         } catch (ResourceNotFoundException e){
             return new ResponseEntity<>(new ApiResult(false,e.getMessage()),HttpStatus.NOT_FOUND);
+        } catch (RateLimitExceededException e){
+            return new ResponseEntity<>(new ApiResult(false,e.getMessage()),HttpStatus.TOO_MANY_REQUESTS);
         } catch (Exception e){
             return new ResponseEntity<>(new ApiResult(false,"Something went wrong. Please try again later."),HttpStatus.INTERNAL_SERVER_ERROR);
         }
@@ -106,6 +116,8 @@ public class EventController {
             return ResponseEntity.ok(eventService.updateEvent(eventId,request,principal.getUserId()));
         } catch (ResourceNotFoundException e){
             return new ResponseEntity<>(new ApiResult(false,e.getMessage()),HttpStatus.NOT_FOUND);
+        } catch (RateLimitExceededException e){
+            return new ResponseEntity<>(new ApiResult(false,e.getMessage()),HttpStatus.TOO_MANY_REQUESTS);
         } catch (Exception e){
             return new ResponseEntity<>(new ApiResult(false,"Something went wrong. Please try again later."),HttpStatus.INTERNAL_SERVER_ERROR);
         }

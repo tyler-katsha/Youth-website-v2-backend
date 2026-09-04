@@ -10,5 +10,5 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Builder
 public class PartialPasswordResetRequest {
-    String email;
+    private String email;
 }

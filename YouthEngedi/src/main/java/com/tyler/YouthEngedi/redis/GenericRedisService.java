@@ -1,9 +1,9 @@
 package com.tyler.YouthEngedi.redis;
 
-import com.fasterxml.jackson.databind.JavaType;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
+import tools.jackson.databind.JavaType;
+import tools.jackson.databind.ObjectMapper;
 
 import java.time.Duration;
 import java.util.List;
@@ -48,6 +48,19 @@ public class GenericRedisService {
         if (val == null) {
             return Optional.empty();
         }
+
+        // If RedisTemplate already deserialized it directly to a List
+        if (val instanceof List<?> list) {
+            // Safe check or mapping if needed
+            try {
+                JavaType type = objectMapper.getTypeFactory().constructCollectionType(List.class, elementClass);
+                List<T> targetList = objectMapper.convertValue(list, type);
+                return Optional.ofNullable(targetList);
+            } catch (IllegalArgumentException e) {
+                return Optional.empty();
+            }
+        }
+
         try {
             JavaType type = objectMapper.getTypeFactory().constructCollectionType(List.class, elementClass);
             List<T> list = objectMapper.convertValue(val, type);

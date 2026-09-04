@@ -1,5 +1,6 @@
 package com.tyler.YouthEngedi.controllers;
 
+import com.tyler.YouthEngedi.Exceptions.RateLimitExceededException;
 import com.tyler.YouthEngedi.Exceptions.ResourceNotFoundException;
 import com.tyler.YouthEngedi.annotations.RateLimited;
 import com.tyler.YouthEngedi.models.UserPrincipal;
@@ -47,6 +48,8 @@ public class UserController {
             return ResponseEntity.ok(userService.findAll(page,size));
         } catch (ResourceNotFoundException e){
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        } catch (RateLimitExceededException e){
+            return new ResponseEntity<>(HttpStatus.TOO_MANY_REQUESTS);
         } catch (Exception e){
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
@@ -64,6 +67,8 @@ public class UserController {
             return ResponseEntity.ok(userService.findById(principal.getUserId()));
         } catch (ResourceNotFoundException e){
             return new ResponseEntity<>(new ApiResult(false,e.getMessage()),HttpStatus.NOT_FOUND);
+        } catch (RateLimitExceededException e){
+            return new ResponseEntity<>(new ApiResult(false,e.getMessage()),HttpStatus.TOO_MANY_REQUESTS);
         } catch (Exception e){
             return new ResponseEntity<>(new ApiResult(false,"Something went wrong. Please try again later."),HttpStatus.INTERNAL_SERVER_ERROR);
         }
@@ -82,6 +87,8 @@ public class UserController {
             return ResponseEntity.ok(userService.updateProfile(request,principal.getUserId()));
         } catch (ResourceNotFoundException e){
             return new ResponseEntity<>(new ApiResult(false,e.getMessage()),HttpStatus.NOT_FOUND);
+        } catch (RateLimitExceededException e){
+            return new ResponseEntity<>(new ApiResult(false,e.getMessage()),HttpStatus.TOO_MANY_REQUESTS);
         } catch (Exception e){
             return new ResponseEntity<>(new ApiResult(false,"Something went wrong. Please try again later."),HttpStatus.BAD_REQUEST);
         }
@@ -99,6 +106,8 @@ public class UserController {
             return new ResponseEntity<>(userService.upgradeMemberRole(email),HttpStatus.OK);
         } catch (ResourceNotFoundException e){
             return new ResponseEntity<>(new ApiResult(false,e.getMessage()),HttpStatus.NOT_FOUND);
+        } catch (RateLimitExceededException e){
+            return new ResponseEntity<>(new ApiResult(false,e.getMessage()),HttpStatus.TOO_MANY_REQUESTS);
         } catch (Exception e){
             return new ResponseEntity<>(new ApiResult(false,"Something went wrong. Please try again later."),HttpStatus.BAD_REQUEST);
         }
@@ -116,6 +125,8 @@ public class UserController {
             return new ResponseEntity<>(userService.downgradeMemberRole(email),HttpStatus.OK);
         } catch (ResourceNotFoundException e){
             return new ResponseEntity<>(new ApiResult(false,e.getMessage()),HttpStatus.NOT_FOUND);
+        } catch (RateLimitExceededException e){
+            return new ResponseEntity<>(new ApiResult(false,e.getMessage()),HttpStatus.TOO_MANY_REQUESTS);
         } catch (Exception e){
             return new ResponseEntity<>(new ApiResult(false,"Something went wrong. Please try again later."),HttpStatus.BAD_REQUEST);
         }
@@ -135,6 +146,8 @@ public class UserController {
             return ResponseEntity.ok(new ApiResult(true, userService.deleteAccount(principal.getUserId())));
         } catch (ResourceNotFoundException e){
             return new ResponseEntity<>(new ApiResult(false,e.getMessage()),HttpStatus.NOT_FOUND);
+        } catch (RateLimitExceededException e){
+            return new ResponseEntity<>(new ApiResult(false,e.getMessage()),HttpStatus.TOO_MANY_REQUESTS);
         } catch (Exception e){
             return new ResponseEntity<>(new ApiResult(false,"Something went wrong. Please try again later."),HttpStatus.BAD_REQUEST);
         }
@@ -152,6 +165,8 @@ public class UserController {
             return ResponseEntity.ok(new ApiResult(true,userService.deactivateMember(email)));
         } catch (ResourceNotFoundException e){
             return new ResponseEntity<>(new ApiResult(false,e.getMessage()),HttpStatus.NOT_FOUND);
+        } catch (RateLimitExceededException e){
+            return new ResponseEntity<>(new ApiResult(false,e.getMessage()),HttpStatus.TOO_MANY_REQUESTS);
         } catch (Exception e){
             return new ResponseEntity<>(new ApiResult(false,"Something went wrong. Please try again later."),HttpStatus.BAD_REQUEST);
         }
@@ -169,6 +184,8 @@ public class UserController {
             return ResponseEntity.ok(new ApiResult(true,userService.activateMember(email)));
         } catch (ResourceNotFoundException e){
             return new ResponseEntity<>(new ApiResult(false,e.getMessage()),HttpStatus.NOT_FOUND);
+        } catch (RateLimitExceededException e){
+            return new ResponseEntity<>(new ApiResult(false,e.getMessage()),HttpStatus.TOO_MANY_REQUESTS);
         } catch (Exception e){
             return new ResponseEntity<>(new ApiResult(false,"Something went wrong. Please try again later."),HttpStatus.BAD_REQUEST);
         }

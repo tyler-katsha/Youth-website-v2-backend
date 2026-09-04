@@ -60,15 +60,18 @@ public class ImageService {
         String size = cloudinaryService.getFileFormattedSize(multipartFile);
         String alt = cloudinaryService.generateAltName(multipartFile);
 
-        PredictionRequest request = PredictionRequest.builder().path(url).build();
-        PredictionResponse response = pythonService.getPrediction(request);
+        var request = PredictionRequest.builder()
+                .path(url)
+                .build();
 
-        if(!response.isApproved()){
+        var response = pythonService.getPrediction(request);
+
+        if(!response.getApproved()){
             cloudinaryService.deleteImageByUrl(url);
             throw new ExplicitContentException("18+ content is not allowed");
         }
 
-        Image image = Image
+        var image = Image
                 .builder()
                 .imageUrl(url)
                 .alt(alt)
@@ -82,7 +85,7 @@ public class ImageService {
 
         redisService.deleteByPattern(IMAGE_PAGE_KEY_PREFIX + "*");
 
-        return "Image/s uploaded";
+        return "Image/s was uploaded successfully";
     }
 
     @AuditAction("Uploading images to Object storage using Cloudinary in chunks")

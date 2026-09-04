@@ -1,6 +1,8 @@
 package com.tyler.YouthEngedi.controllers;
 
+import com.tyler.YouthEngedi.Exceptions.RateLimitExceededException;
 import com.tyler.YouthEngedi.annotations.RateLimited;
+import com.tyler.YouthEngedi.models.dtos.ApiResult;
 import com.tyler.YouthEngedi.models.events.EventBufferStats;
 import com.tyler.YouthEngedi.services.DashboardHistoryService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -35,6 +37,8 @@ public class DashboardHistoryController {
     public ResponseEntity<?> getRecentEvents(){
         try{
             return ResponseEntity.ok(historyService.getRecentEvents());
+        } catch (RateLimitExceededException e){
+            return new ResponseEntity<>(e.getMessage(),HttpStatus.TOO_MANY_REQUESTS);
         } catch(Exception e){
             return new ResponseEntity<>("Something went wrong", HttpStatus.INTERNAL_SERVER_ERROR);
         }

@@ -19,6 +19,6 @@ public class FragmentedImage implements Serializable {
     private static final long serialVersionUID = 1L;
 
     private MultipartFile chunk;
-    private int index;
+    private Integer index;
     private InnerFragmentedImage innerFragmentedImage;
 }

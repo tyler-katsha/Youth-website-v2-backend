@@ -17,7 +17,7 @@ public class EventResponse implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
 
-    private long id;
+    private Long id;
     private String title;
     private String startTime;
     private String endTime;

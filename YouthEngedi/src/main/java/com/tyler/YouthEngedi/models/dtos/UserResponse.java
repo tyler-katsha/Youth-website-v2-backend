@@ -30,5 +30,5 @@ public class UserResponse implements Serializable {
     private Set<Role> roles;
     private String bio;
     private String profileImageUrl;
-    private boolean enabled;
+    private Boolean enabled;
 }

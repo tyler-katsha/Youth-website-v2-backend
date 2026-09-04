@@ -137,20 +137,10 @@ public class EventService {
 
     public List<EventResponse> findAllEvents() {
 
-        var cached = redisService.getListValue(EVENT_ALL_KEY, EventResponse.class);
-
-        if (cached.isPresent()) {
-            return cached.get();
-        }
-
-        var events = eventRepository.findAll()
+        return eventRepository.findAll()
                 .stream()
                 .map(eventMapper::mapToEventResponse)
                 .toList();
-
-        redisService.set(EVENT_ALL_KEY, events, EVENT_CACHE_TTL);
-
-        return events;
     }
 
 

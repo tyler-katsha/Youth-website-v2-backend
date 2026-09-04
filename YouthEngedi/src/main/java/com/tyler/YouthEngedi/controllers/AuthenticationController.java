@@ -178,6 +178,8 @@ public class AuthenticationController {
             return new ResponseEntity<>("Failed to verify user",HttpStatus.NO_CONTENT);
         } catch(ExpiredJwtException e){
             return new ResponseEntity<>("Session is expired",HttpStatus.SERVICE_UNAVAILABLE);
+        } catch (RateLimitExceededException e){
+            return new ResponseEntity<>(e.getMessage(),HttpStatus.TOO_MANY_REQUESTS);
         } catch (Exception e){
             return new ResponseEntity<>("Something went wrong. Please try again",HttpStatus.INTERNAL_SERVER_ERROR);
         }

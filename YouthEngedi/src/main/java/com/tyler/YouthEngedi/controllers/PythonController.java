@@ -1,6 +1,8 @@
 package com.tyler.YouthEngedi.controllers;
 
+import com.tyler.YouthEngedi.Exceptions.RateLimitExceededException;
 import com.tyler.YouthEngedi.annotations.RateLimited;
+import com.tyler.YouthEngedi.models.dtos.ApiResult;
 import com.tyler.YouthEngedi.models.dtos.PredictionRequest;
 import com.tyler.YouthEngedi.models.dtos.PredictionResponse;
 import com.tyler.YouthEngedi.services.PythonService;
@@ -35,6 +37,8 @@ public class PythonController {
     public ResponseEntity<PredictionResponse> getPrediction(@RequestBody PredictionRequest request){
         try{
             return ResponseEntity.ok(pythonService.getPrediction(request));
+        } catch (RateLimitExceededException e){
+            return new ResponseEntity<>(PredictionResponse.builder().detections(null).approved(false).build(),HttpStatus.TOO_MANY_REQUESTS);
         } catch (Exception e){
             return new ResponseEntity<>(PredictionResponse.builder().detections(null).approved(false).build(), HttpStatus.INTERNAL_SERVER_ERROR);
         }

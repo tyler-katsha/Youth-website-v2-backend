@@ -2,6 +2,7 @@ package com.tyler.YouthEngedi.controllers;
 
 import com.tyler.YouthEngedi.Exceptions.ExplicitContentException;
 import com.tyler.YouthEngedi.Exceptions.ImageException;
+import com.tyler.YouthEngedi.Exceptions.RateLimitExceededException;
 import com.tyler.YouthEngedi.Exceptions.ResourceNotFoundException;
 import com.tyler.YouthEngedi.annotations.RateLimited;
 import com.tyler.YouthEngedi.models.UserPrincipal;
@@ -45,6 +46,8 @@ public class ImageController {
              return ResponseEntity.ok(imageService.findAll(page,size));
          } catch (ImageException e){
              return new ResponseEntity<>(new ApiResult(false,e.getMessage()),HttpStatus.BAD_REQUEST);
+         } catch (RateLimitExceededException e){
+             return new ResponseEntity<>(new ApiResult(false,e.getMessage()),HttpStatus.TOO_MANY_REQUESTS);
          } catch (Exception e){
              return new ResponseEntity<>(new ApiResult(false,"Something went wrong. Please try again later."),HttpStatus.INTERNAL_SERVER_ERROR);
          }
@@ -65,7 +68,9 @@ public class ImageController {
             return new ResponseEntity<>(new ApiResult(false,"Unable to upload image"),HttpStatus.BAD_REQUEST);
         } catch(ExplicitContentException e){
             return new ResponseEntity<>(new ApiResult(false,e.getMessage()),HttpStatus.NOT_ACCEPTABLE);
-        }catch (Exception e){
+        } catch (RateLimitExceededException e){
+            return new ResponseEntity<>(new ApiResult(false,e.getMessage()),HttpStatus.TOO_MANY_REQUESTS);
+        } catch (Exception e){
             return new ResponseEntity<>(new ApiResult(false,"Something went wrong. Please try again later."),HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
@@ -83,6 +88,8 @@ public class ImageController {
             return ResponseEntity.ok(new ApiResult(true,"Image Uploaded"));
         } catch (ImageException e){
             return new ResponseEntity<>(new ApiResult(false,"Unable to upload image"),HttpStatus.BAD_REQUEST);
+        } catch (RateLimitExceededException e){
+            return new ResponseEntity<>(new ApiResult(false,e.getMessage()),HttpStatus.TOO_MANY_REQUESTS);
         } catch (Exception e){
             return new ResponseEntity<>(new ApiResult(false,"Something went wrong. Please try again later."),HttpStatus.INTERNAL_SERVER_ERROR);
         }
@@ -102,8 +109,10 @@ public class ImageController {
             return ResponseEntity.ok(new ApiResult(true,"Image Deleted"));
         } catch(ResourceNotFoundException e){
             return new ResponseEntity<>(new ApiResult(false,"Image not found"),HttpStatus.NOT_FOUND);
-        }catch (ImageException e){
+        } catch (ImageException e){
             return new ResponseEntity<>(new ApiResult(false,"Unable to upload image"),HttpStatus.BAD_REQUEST);
+        } catch (RateLimitExceededException e){
+            return new ResponseEntity<>(new ApiResult(false,e.getMessage()),HttpStatus.TOO_MANY_REQUESTS);
         } catch (Exception e){
             return new ResponseEntity<>(new ApiResult(false,"Something went wrong. Please try again later."),HttpStatus.INTERNAL_SERVER_ERROR);
         }

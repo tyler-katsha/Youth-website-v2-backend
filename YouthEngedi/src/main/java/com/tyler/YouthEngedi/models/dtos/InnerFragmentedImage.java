@@ -19,5 +19,5 @@ public class InnerFragmentedImage implements Serializable {
 
     private String fileName;
     private String fileId;
-    private int total;
+    private Integer total;
 }

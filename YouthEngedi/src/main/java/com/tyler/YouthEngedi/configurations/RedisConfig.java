@@ -1,43 +1,46 @@
 package com.tyler.YouthEngedi.configurations;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Primary;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.serializer.GenericJacksonJsonRedisSerializer;
 import org.springframework.data.redis.serializer.RedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
+import tools.jackson.databind.DefaultTyping;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
+import tools.jackson.databind.jsontype.BasicPolymorphicTypeValidator;
+import tools.jackson.databind.jsontype.PolymorphicTypeValidator;
+
 @Configuration
 public class RedisConfig {
 
     @Bean
-    @Primary
-    public ObjectMapper objectMapper() {
-        ObjectMapper mapper = new ObjectMapper();
-        mapper.registerModule(new JavaTimeModule());
-        return mapper;
-    }
-
-    @Bean
-    public RedisTemplate<String,Object> redisTemplate(RedisConnectionFactory factory){
-
-        RedisTemplate<String,Object> template = new RedisTemplate<>();
-
+    public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory factory) {
+        RedisTemplate<String, Object> template = new RedisTemplate<>();
         template.setConnectionFactory(factory);
 
-        RedisSerializer<Object> jsonSerializer = RedisSerializer.json();
+        PolymorphicTypeValidator ptv = BasicPolymorphicTypeValidator.builder()
+                .allowIfBaseType(Object.class)
+                .build();
 
-        template.setKeySerializer(new StringRedisSerializer());
+        ObjectMapper redisMapper = JsonMapper.builder()
+                .findAndAddModules()
+                .activateDefaultTyping(ptv, DefaultTyping.NON_FINAL)
+                .build();
+
+        RedisSerializer<Object> jsonSerializer = new GenericJacksonJsonRedisSerializer(redisMapper);
+
+        StringRedisSerializer stringSerializer = new StringRedisSerializer();
+
+        template.setKeySerializer(stringSerializer);
         template.setValueSerializer(jsonSerializer);
 
-        template.setHashKeySerializer(new StringRedisSerializer());
+        template.setHashKeySerializer(stringSerializer);
         template.setHashValueSerializer(jsonSerializer);
 
         template.afterPropertiesSet();
-
         return template;
-
     }
 }

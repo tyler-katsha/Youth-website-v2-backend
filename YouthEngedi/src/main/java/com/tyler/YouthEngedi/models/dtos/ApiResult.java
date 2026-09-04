@@ -17,6 +17,6 @@ public class ApiResult implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
 
-    private boolean success;
+    private Boolean success;
     private String message;
 }

@@ -15,7 +15,6 @@ public final class GuestScheduling {
 
     @Scheduled(fixedDelay = 60_000)
     public void evictExpiredGuest(){
-        System.out.println("Executing Expired Guest task");
         long now = Instant.now().toEpochMilli();
 
         guests().entrySet().removeIf(entry -> {

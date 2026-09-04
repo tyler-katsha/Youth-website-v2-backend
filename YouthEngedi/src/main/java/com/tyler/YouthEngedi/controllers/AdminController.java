@@ -1,5 +1,6 @@
 package com.tyler.YouthEngedi.controllers;
 
+import com.tyler.YouthEngedi.Exceptions.RateLimitExceededException;
 import com.tyler.YouthEngedi.Exceptions.ResourceNotFoundException;
 import com.tyler.YouthEngedi.annotations.RateLimited;
 import com.tyler.YouthEngedi.models.AuditLog;
@@ -38,6 +39,8 @@ public class AdminController {
     public ResponseEntity<?> getSystemLogs(@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "100") int size){
         try{
             return ResponseEntity.ok(adminService.getSystemLogs(page,size));
+        } catch (RateLimitExceededException e){
+            return new ResponseEntity<>(new ApiResult(false,e.getMessage()),HttpStatus.TOO_MANY_REQUESTS);
         } catch(Exception e){
             return new ResponseEntity<>(new ApiResult(false,"Something went wrong"),HttpStatus.INTERNAL_SERVER_ERROR);
         }
@@ -52,6 +55,8 @@ public class AdminController {
     public ResponseEntity<?> getSystemPerformanceData(@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "100") int size){
         try{
             return ResponseEntity.ok(adminService.getSystemPerformanceData(page,size));
+        } catch (RateLimitExceededException e){
+            return new ResponseEntity<>(new ApiResult(false,e.getMessage()),HttpStatus.TOO_MANY_REQUESTS);
         } catch(Exception e){
             return new ResponseEntity<>(new ApiResult(false,"Something went wrong"),HttpStatus.INTERNAL_SERVER_ERROR);
         }

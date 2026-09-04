@@ -1,5 +1,6 @@
 package com.tyler.YouthEngedi.controllers;
 
+import com.tyler.YouthEngedi.Exceptions.RateLimitExceededException;
 import com.tyler.YouthEngedi.Exceptions.ResourceNotFoundException;
 import com.tyler.YouthEngedi.annotations.RateLimited;
 import com.tyler.YouthEngedi.models.dtos.AnnouncementDto;
@@ -39,6 +40,8 @@ public class AnnouncementController {
             return ResponseEntity.ok(announcementService.findAll(page,size));
         } catch (ResourceNotFoundException e){
             return new ResponseEntity<>(new ApiResult(false,"Failed to verify user"),HttpStatus.NOT_FOUND);
+        } catch (RateLimitExceededException e){
+            return new ResponseEntity<>(new ApiResult(false,e.getMessage()),HttpStatus.TOO_MANY_REQUESTS);
         } catch (Exception e){
             return new ResponseEntity<>(new ApiResult(false,"Something went wrong. Please try again later."), HttpStatus.INTERNAL_SERVER_ERROR);
         }
@@ -56,6 +59,8 @@ public class AnnouncementController {
             return ResponseEntity.ok(announcementService.findById(id));
         } catch (ResourceNotFoundException e){
             return new ResponseEntity<>(new ApiResult(false,"Unable to find announcement"),HttpStatus.NOT_FOUND);
+        } catch (RateLimitExceededException e){
+            return new ResponseEntity<>(new ApiResult(false,e.getMessage()),HttpStatus.TOO_MANY_REQUESTS);
         } catch (Exception e){
             return new ResponseEntity<>(new ApiResult(false,"Something went wrong. Please try again later."), HttpStatus.INTERNAL_SERVER_ERROR);
         }
@@ -71,6 +76,8 @@ public class AnnouncementController {
         try{
             announcementService.createAnnouncement(request);
             return ResponseEntity.ok(new ApiResult(true,"Successfully created announcement"));
+        } catch (RateLimitExceededException e){
+            return new ResponseEntity<>(new ApiResult(false,e.getMessage()),HttpStatus.TOO_MANY_REQUESTS);
         } catch (Exception e){
             return new ResponseEntity<>(new ApiResult(false,"Something went wrong. Please try again later."), HttpStatus.INTERNAL_SERVER_ERROR);
         }
@@ -88,6 +95,8 @@ public class AnnouncementController {
             return ResponseEntity.ok(new ApiResult(true,"Successfully updated announcement"));
         } catch (ResourceNotFoundException e){
             return new ResponseEntity<>(new ApiResult(false,"Announcement doesn't exist"),HttpStatus.NOT_FOUND);
+        } catch (RateLimitExceededException e){
+            return new ResponseEntity<>(new ApiResult(false,e.getMessage()),HttpStatus.TOO_MANY_REQUESTS);
         } catch (Exception e){
             return new ResponseEntity<>(new ApiResult(false,"Something went wrong. Please try again later."), HttpStatus.INTERNAL_SERVER_ERROR);
         }
@@ -106,6 +115,8 @@ public class AnnouncementController {
             return ResponseEntity.ok(new ApiResult(true,"Successfully deleted announcement"));
         } catch (ResourceNotFoundException e){
             return new ResponseEntity<>(new ApiResult(false,"Announcement doesn't exist"),HttpStatus.NOT_FOUND);
+        } catch (RateLimitExceededException e){
+            return new ResponseEntity<>(new ApiResult(false,e.getMessage()),HttpStatus.TOO_MANY_REQUESTS);
         } catch (Exception e){
             return new ResponseEntity<>(new ApiResult(false,"Something went wrong. Please try again later."), HttpStatus.INTERNAL_SERVER_ERROR);
         }
