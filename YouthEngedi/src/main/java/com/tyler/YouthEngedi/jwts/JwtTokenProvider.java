@@ -13,6 +13,8 @@ import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
 import java.security.Key;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -28,6 +30,8 @@ public class JwtTokenProvider {
 
     public String generateToken(User user) {
 
+        var now = Instant.now();
+        var expiration = now.plusMillis(jwtExpiration);
         Map<String, Object> claims = new HashMap<>();
         claims.put("userId",user.getId());
         claims.put("isDeleted",user.isDeleted());
@@ -36,13 +40,16 @@ public class JwtTokenProvider {
         return Jwts.builder()
                 .claims(claims)
                 .subject(user.getEmail())
-                .issuedAt(new Date(System.currentTimeMillis()))
-                .expiration(new Date(System.currentTimeMillis() + jwtExpiration))
+                .issuedAt(Date.from(now))
+                .expiration(Date.from(expiration))
                 .signWith(getKey())
                 .compact();
     }
 
-    public String generateToken(User user, int time) {
+    public String generateToken(User user, Duration duration) {
+
+        Instant now = Instant.now();
+        Instant expiration = now.plus(duration);
 
         Map<String, Object> claims = new HashMap<>();
         claims.put("userId",user.getId());
@@ -52,8 +59,8 @@ public class JwtTokenProvider {
         return Jwts.builder()
                 .claims(claims)
                 .subject(user.getEmail())
-                .issuedAt(new Date(System.currentTimeMillis()))
-                .expiration(new Date(System.currentTimeMillis() + time))
+                .issuedAt(Date.from(now))
+                .expiration(Date.from(expiration))
                 .signWith(getKey())
                 .compact();
     }

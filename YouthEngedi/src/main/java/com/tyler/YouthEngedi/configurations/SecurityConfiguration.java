@@ -1,6 +1,5 @@
 package com.tyler.YouthEngedi.configurations;
 
-import com.tyler.YouthEngedi.filters.CustomLogoutHandler;
 import com.tyler.YouthEngedi.filters.JwtAuthenticationFilter;
 import com.tyler.YouthEngedi.models.enums.Role;
 import jakarta.servlet.http.HttpServletResponse;
@@ -43,9 +42,6 @@ public class SecurityConfiguration {
     @Autowired
     private OAuth2FailureHandler failureHandler;
 
-    @Autowired
-    private CustomLogoutHandler customLogoutHandler;
-
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
@@ -61,13 +57,7 @@ public class SecurityConfiguration {
                         .anyRequest()
                         .authenticated())
                 .oauth2Login(oauth -> oauth.successHandler(successHandler).failureHandler(failureHandler))
-                .logout(logout -> logout
-                        .logoutUrl("/api/v1/auth/logout")
-                        .addLogoutHandler(customLogoutHandler)
-                        .logoutSuccessHandler(((request, response, authentication) -> response.setStatus(HttpServletResponse.SC_ACCEPTED)))
-                        .clearAuthentication(true))
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
-                .addFilterBefore(jwtAuthenticationFilter, LogoutFilter.class)
                 .build();
     }
 

@@ -3,20 +3,21 @@ package com.tyler.YouthEngedi.controllers;
 import com.tyler.YouthEngedi.Exceptions.*;
 import com.tyler.YouthEngedi.Repository.VerificationTokenRepository;
 import com.tyler.YouthEngedi.annotations.RateLimited;
+import com.tyler.YouthEngedi.jwts.JwtTokenProvider;
 import com.tyler.YouthEngedi.models.PasswordResetRequest;
 import com.tyler.YouthEngedi.models.User;
 import com.tyler.YouthEngedi.models.UserPrincipal;
 import com.tyler.YouthEngedi.models.VerificationToken;
-import com.tyler.YouthEngedi.models.dtos.ApiResult;
-import com.tyler.YouthEngedi.models.dtos.UserLoginRequest;
-import com.tyler.YouthEngedi.models.dtos.UserRegisterRequest;
+import com.tyler.YouthEngedi.models.dtos.*;
 import com.tyler.YouthEngedi.services.EmailService;
+import com.tyler.YouthEngedi.services.TokenSessionService;
 import com.tyler.YouthEngedi.services.UserService;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -25,6 +26,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 @RestController
@@ -183,5 +185,28 @@ public class AuthenticationController {
         } catch (Exception e){
             return new ResponseEntity<>("Something went wrong. Please try again",HttpStatus.INTERNAL_SERVER_ERROR);
         }
+    }
+
+    @PostMapping("/refresh")
+    public ResponseEntity<?> refresh(@RequestBody RefreshRequest request){
+        try{
+
+            return ResponseEntity.ok(userService.refreshToken(request));
+        } catch(MalformedTokenException e) {
+            return new ResponseEntity<>(e.getMessage(),HttpStatus.UNPROCESSABLE_CONTENT);
+        } catch (SecurityException e) {
+            return new ResponseEntity<>(e.getMessage(),HttpStatus.UNAUTHORIZED);
+        } catch (Exception e){
+            return new ResponseEntity<>(e.getMessage(),HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<Void> logout(@AuthenticationPrincipal UserPrincipal principal, @RequestBody LogoutRequest request) {
+
+        if (principal != null && request != null) {
+            userService.logout(principal.getUserId(),request.getFamilyId());
+        }
+        return ResponseEntity.noContent().build();
     }
 }

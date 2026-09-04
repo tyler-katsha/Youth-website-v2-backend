@@ -25,6 +25,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.sql.Ref;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
@@ -41,6 +42,7 @@ public class UserService {
     private final CloudinaryService cloudinaryService;
     private final ApplicationEventPublisher publisher;
     private final GenericRedisService redisService;
+    private final TokenSessionService tokenSessionService;
 
     private static final String USER_ID_KEY_PREFIX = "user:id:";
     private static final String USER_EMAIL_KEY_PREFIX = "user:email:";
@@ -48,13 +50,14 @@ public class UserService {
     private static final Duration USER_CACHE_TTL = Duration.ofHours(1);
     private static final Duration PAGE_CACHE_TTL = Duration.ofMinutes(15);
 
-    public UserService(UserRepository userRepository, JwtTokenProvider tokenProvider, CloudinaryService cloudinaryService, UserMapper userMapper, ApplicationEventPublisher publisher, GenericRedisService redisService) {
+    public UserService(UserRepository userRepository, JwtTokenProvider tokenProvider, CloudinaryService cloudinaryService, UserMapper userMapper, ApplicationEventPublisher publisher, GenericRedisService redisService,TokenSessionService tokenSessionService) {
         this.cloudinaryService = cloudinaryService;
         this.userMapper = userMapper;
         this.userRepository = userRepository;
         this.tokenProvider = tokenProvider;
         this.publisher = publisher;
         this.redisService = redisService;
+        this.tokenSessionService = tokenSessionService;
     }
 
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder(12);
@@ -101,7 +104,7 @@ public class UserService {
         return "Registration successful";
     }
 
-    public String login(UserLoginRequest request) {
+    public AuthTokenResponse login(UserLoginRequest request) {
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new AuthorizationException("Invalid credentials"));
 
@@ -117,10 +120,57 @@ public class UserService {
 
         publisher.publishEvent(event);
 
-        return tokenProvider.generateToken(user);
+        var familyId = UUID.randomUUID().toString();
+
+        var accessToken = tokenProvider.generateToken(user);
+        var refreshToken = tokenSessionService.createTokenFamily(user.getId(),familyId);
+
+        return AuthTokenResponse.builder()
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
+                .familyId(familyId)
+                .build();
     }
 
-    public void logout(long userId) {
+    public AuthTokenResponse refreshToken(RefreshRequest request) {
+
+        String[] parts = request.getRefreshToken().split("\\.",-1);
+
+
+        if(parts.length != 3 || parts[0].isBlank() || parts[1].isBlank() || parts[2].isBlank()){
+            throw new MalformedTokenException("Malformed token");
+        }
+
+        long userId;
+
+        try{
+            userId = Long.parseLong(parts[0]);
+        } catch(NumberFormatException e){
+            throw new MalformedTokenException("Malformed token");
+        }
+
+        var familyId = parts[1];
+        var secret = parts[2];
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new AuthorizationException("Invalid credentials"));
+
+        var newSecret = tokenSessionService.rotateToken(userId, familyId, secret);
+
+        var newFreshToken = userId + "." + familyId + "." + newSecret;
+
+        var newAccessToken = tokenProvider.generateToken(user,Duration.ofMinutes(15));
+
+        return AuthTokenResponse.builder()
+                .accessToken(newAccessToken)
+                .refreshToken(newFreshToken)
+                .familyId(familyId)
+                .build();
+    }
+
+    public void logout(long userId,String familyId) {
+
+
         var user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User doesn't exist"));
 
@@ -128,7 +178,10 @@ public class UserService {
 
         publisher.publishEvent(event);
 
-        evictUserCache(userId,user.getEmail());
+        if(familyId != null && !familyId.isBlank()){
+            tokenSessionService.revokeSession(user.getId(),familyId);
+        }
+        evictUserCache(user.getId(),user.getEmail());
     }
 
     public Page<UserResponse> findAll(int page, int size) {
@@ -402,4 +455,6 @@ public class UserService {
 
         evictUserCache(existingUser.getId(), existingUser.getEmail());
     }
+
+
 }

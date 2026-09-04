@@ -5,6 +5,7 @@ import com.tyler.YouthEngedi.Exceptions.LockedAccountException;
 import com.tyler.YouthEngedi.Repository.UserRepository;
 import com.tyler.YouthEngedi.jwts.JwtTokenProvider;
 import com.tyler.YouthEngedi.models.User;
+import com.tyler.YouthEngedi.models.dtos.AuthTokenResponse;
 import com.tyler.YouthEngedi.models.dtos.UserLoginRequest;
 import com.tyler.YouthEngedi.models.dtos.UserRegisterRequest;
 import com.tyler.YouthEngedi.models.enums.AuthProvider;
@@ -46,10 +47,10 @@ class UserServiceTest {
     private CloudinaryService cloudinaryService;
 
     @Mock
-    private ApplicationEventPublisher publisher;
+    private TokenSessionService tokenSessionService;
 
     @Mock
-    private GenericRedisService redisService;
+    private ApplicationEventPublisher publisher;
 
     @InjectMocks
     private UserService userService;
@@ -127,8 +128,10 @@ class UserServiceTest {
     class LoginUserTests {
 
         @Test
-        @DisplayName("Logins the user successfully and returns a jwt-token")
-        void loginTheUserSuccessfullyAndReturnsAJwtToken() {
+        @DisplayName("Logs in the user successfully and returns access and refresh tokens")
+        void loginTheUserSuccessfullyAndReturnsTokens() {
+
+            // Arrange
             String rawPassword = "mySecurePassword";
             String hashedPassword = testEncoder.encode(rawPassword);
 
@@ -144,14 +147,47 @@ class UserServiceTest {
                     .enabled(true)
                     .build();
 
-            when(userRepository.findByEmail(request.getEmail())).thenReturn(Optional.of(activeUser));
-            when(tokenProvider.generateToken(activeUser)).thenReturn("mocked.jwt.token");
+            String accessToken = "mocked.jwt.token";
+            String refreshToken = "1.family-id.refresh-secret";
 
-            String token = userService.login(request);
+            when(userRepository.findByEmail(request.getEmail()))
+                    .thenReturn(Optional.of(activeUser));
 
-            assertEquals("mocked.jwt.token", token);
-            verify(publisher, times(1)).publishEvent(any(Object.class));
-            verify(tokenProvider, times(1)).generateToken(activeUser);
+            when(tokenProvider.generateToken(activeUser))
+                    .thenReturn(accessToken);
+
+            when(tokenSessionService.createTokenFamily(
+                    eq(activeUser.getId()),
+                    anyString()
+            )).thenReturn(refreshToken);
+
+            // Act
+            AuthTokenResponse response = userService.login(request);
+
+            // Assert
+            assertNotNull(response);
+
+            assertEquals(accessToken, response.getAccessToken());
+            assertEquals(refreshToken, response.getRefreshToken());
+
+            assertNotNull(response.getFamilyId());
+            assertFalse(response.getFamilyId().isBlank());
+
+            // Verify interactions
+            verify(userRepository, times(1))
+                    .findByEmail(request.getEmail());
+
+            verify(tokenProvider, times(1))
+                    .generateToken(activeUser);
+
+            verify(tokenSessionService, times(1))
+                    .createTokenFamily(
+                            eq(activeUser.getId()),
+                            eq(response.getFamilyId())
+                    );
+
+            verify(publisher, times(1))
+                    .publishEvent(any(Object.class));
         }
 
         @Test
@@ -201,6 +237,36 @@ class UserServiceTest {
             verifyNoInteractions(publisher, tokenProvider);
         }
 
+        @Test
+        @DisplayName("Rejects login when user account is disabled")
+        void rejectsLoginWhenUserAccountIsDisabled() {
+
+            UserLoginRequest request = UserLoginRequest.builder()
+                    .email("jane@example.com")
+                    .password("mySecurePassword")
+                    .build();
+
+            User disabledUser = User.builder()
+                    .id(1L)
+                    .email("jane@example.com")
+                    .password(testEncoder.encode("mySecurePassword"))
+                    .enabled(false)
+                    .build();
+
+            when(userRepository.findByEmail(request.getEmail()))
+                    .thenReturn(Optional.of(disabledUser));
+
+            assertThrows(
+                    LockedAccountException.class,
+                    () -> userService.login(request)
+            );
+
+            verify(tokenProvider, never()).generateToken(any());
+            verify(tokenSessionService, never())
+                    .createTokenFamily(anyLong(), anyString());
+
+            verify(publisher, never()).publishEvent(any());
+        }
         @Test
         @DisplayName("Throws an LockedAccountException for a user trying to login for a inactive account")
         void throwsAnLockedAccountExceptionForAUserTryingToLoginForAInactiveAccount() {
