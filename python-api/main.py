@@ -50,6 +50,6 @@ async def predict(request: PredictionRequest):
         traceback.print_exc()
         raise HTTPException(status_code=500,detail=traceback.format_exc())
 
-app.get("/healthz")
+@app.get("/healthz")
 async def health_check():
     return {"status": "UP"}
