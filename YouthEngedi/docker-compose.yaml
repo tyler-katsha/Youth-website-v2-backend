@@ -41,7 +41,7 @@ services:
       - "8080:8080"
     networks:
       - youth-network
-      -
+
   python:
     build: ../python-api
     container_name: python-api

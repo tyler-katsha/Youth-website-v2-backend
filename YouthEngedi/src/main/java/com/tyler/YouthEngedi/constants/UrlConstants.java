@@ -4,7 +4,7 @@ import org.springframework.beans.factory.annotation.Value;
 
 public class UrlConstants {
 
-    public final static boolean production = false;
+    public final static boolean production = true;
     public final static String FRONTEND_URL_DEV = "http://localhost:5173/";
 
     public final static String FRONTEND_OAUTH_DEV = FRONTEND_URL_DEV + "oauth2/redirect";
