@@ -14,6 +14,7 @@ import com.tyler.YouthEngedi.redis.GenericRedisService;
 import com.tyler.YouthEngedi.utils.GuestManager;
 import com.tyler.YouthEngedi.utils.WebSocketHelper;
 import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -34,6 +35,7 @@ import static com.tyler.YouthEngedi.utils.IdManager.delegateIds;
 import static com.tyler.YouthEngedi.utils.IdManager.releaseId;
 
 @Service
+@RequiredArgsConstructor
 public class UserService {
 
     private final UserRepository userRepository;
@@ -49,16 +51,6 @@ public class UserService {
     private static final String USER_PAGE_KEY_PREFIX = "users:page:";
     private static final Duration USER_CACHE_TTL = Duration.ofHours(1);
     private static final Duration PAGE_CACHE_TTL = Duration.ofMinutes(15);
-
-    public UserService(UserRepository userRepository, JwtTokenProvider tokenProvider, CloudinaryService cloudinaryService, UserMapper userMapper, ApplicationEventPublisher publisher, GenericRedisService redisService,TokenSessionService tokenSessionService) {
-        this.cloudinaryService = cloudinaryService;
-        this.userMapper = userMapper;
-        this.userRepository = userRepository;
-        this.tokenProvider = tokenProvider;
-        this.publisher = publisher;
-        this.redisService = redisService;
-        this.tokenSessionService = tokenSessionService;
-    }
 
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder(12);
 
@@ -337,7 +329,7 @@ public class UserService {
         var user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
-        toggleEnabled(user, false);
+        toggleEnabled(user);
         evictUserCache(user.getId(), user.getEmail());
 
         return "User was deactivated successfully";
@@ -347,15 +339,15 @@ public class UserService {
         var user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
-        toggleEnabled(user, true);
+        toggleEnabled(user);
         evictUserCache(user.getId(), user.getEmail());
 
         return "User was activated successfully";
     }
 
     @Transactional
-    public void toggleEnabled(User user, boolean toggle) {
-        user.setEnabled(toggle);
+    public void toggleEnabled(User user) {
+        user.setEnabled(!user.isEnabled());
         userRepository.save(user);
     }
 

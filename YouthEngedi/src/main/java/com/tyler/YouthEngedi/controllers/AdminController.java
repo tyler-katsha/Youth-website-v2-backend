@@ -20,15 +20,12 @@ import org.springframework.web.bind.annotation.*;
 import java.time.temporal.ChronoUnit;
 
 @RestController
+@RequiredArgsConstructor
 @RequestMapping("/api/v1/admin")
 @Tag(name="Admin Management",description = "Api fetching and managing admin based features strictly")
 public class AdminController {
 
     private final AdminService adminService;
-
-    public AdminController(AdminService adminService){
-        this.adminService = adminService;
-    }
 
     @RateLimited(capacity = 100,tokens = 100,duration = 10,unit = ChronoUnit.SECONDS)
     @PreAuthorize("hasRole('ADMIN')")

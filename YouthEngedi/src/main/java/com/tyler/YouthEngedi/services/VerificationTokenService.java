@@ -19,15 +19,12 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 @Service
+@RequiredArgsConstructor
 public class VerificationTokenService {
 
     private final VerificationTokenRepository verificationTokenRepository;
     private final UserRepository userRepository;
 
-    public VerificationTokenService(VerificationTokenRepository verificationTokenRepository,UserRepository userRepository){
-        this.verificationTokenRepository = verificationTokenRepository;
-        this.userRepository = userRepository;
-    }
     @Transactional
     public void sendVerificationLink(User user){
 

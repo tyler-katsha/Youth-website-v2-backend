@@ -13,6 +13,7 @@ import com.tyler.YouthEngedi.models.enums.AnnouncementType;
 import com.tyler.YouthEngedi.models.mappers.AnnouncementMapper;
 import com.tyler.YouthEngedi.redis.GenericRedisService;
 import com.tyler.YouthEngedi.utils.TimeUtils;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -24,6 +25,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
+@RequiredArgsConstructor
 public class AnnouncementService {
     private final AnnouncementRepository announcementRepository;
     private final EventRepository eventRepository;
@@ -35,12 +37,6 @@ public class AnnouncementService {
     private final static Duration ANNOUNCEMENT_CACHE_TTL = Duration.ofHours(1);
     private static final Duration PAGE_CACHE_TTL = Duration.ofMinutes(15);
 
-    public AnnouncementService(AnnouncementRepository announcementRepository,EventRepository eventRepository,AnnouncementMapper announcementMapper,GenericRedisService redisService){
-        this.announcementRepository = announcementRepository;
-        this.eventRepository = eventRepository;
-        this.announcementMapper = announcementMapper;
-        this.redisService = redisService;
-    }
     public Page<AnnouncementDto> findAll(int page,int size){
         var cacheKey = ANNOUNCEMENT_PAGE_KEY_PREFIX + page + ":size:" + size;
 

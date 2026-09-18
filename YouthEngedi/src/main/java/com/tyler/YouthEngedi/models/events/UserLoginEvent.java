@@ -8,4 +8,4 @@ import lombok.experimental.SuperBuilder;
 @Getter
 @ToString(callSuper = true)
 @SuperBuilder
-public class UserLoginEvent extends BaseAuthEvent{}
+public final class UserLoginEvent extends BaseAuthEvent{}

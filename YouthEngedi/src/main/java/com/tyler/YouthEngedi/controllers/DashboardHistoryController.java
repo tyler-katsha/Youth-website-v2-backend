@@ -8,6 +8,7 @@ import com.tyler.YouthEngedi.services.DashboardHistoryService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -18,15 +19,12 @@ import org.springframework.web.bind.annotation.RestController;
 import java.time.temporal.ChronoUnit;
 
 @RestController
+@RequiredArgsConstructor
 @RequestMapping("/api/v1/dashboard")
 @Tag(name = "Dashboard History Management", description = "Api for fetching recent event logs for user activity")
 public class DashboardHistoryController {
 
     private final DashboardHistoryService historyService;
-
-    public DashboardHistoryController(DashboardHistoryService historyService){
-        this.historyService = historyService;
-    }
 
     @RateLimited(unit = ChronoUnit.MINUTES)
     @PreAuthorize("hasRole('ADMIN')")

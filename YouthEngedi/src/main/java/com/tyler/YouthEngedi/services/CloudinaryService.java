@@ -28,16 +28,13 @@ import java.util.Map;
 import java.util.Optional;
 
 @Service
+@RequiredArgsConstructor
 public class CloudinaryService {
 
     private final Cloudinary cloudinary;
-
     private final UserRepository userRepository;
 
-    public CloudinaryService(Cloudinary cloudinary,UserRepository userRepository){
-        this.cloudinary = cloudinary;
-        this.userRepository = userRepository;
-    }
+
     private static final String TEMP_DIR = "temp/uploads/";
     public String upload(MultipartFile file){
         try{

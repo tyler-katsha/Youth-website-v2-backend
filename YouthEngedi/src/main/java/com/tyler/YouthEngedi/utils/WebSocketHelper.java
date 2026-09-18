@@ -1,10 +1,10 @@
 package com.tyler.YouthEngedi.utils;
 
+import com.tyler.YouthEngedi.models.Image;
 import com.tyler.YouthEngedi.models.User;
 import com.tyler.YouthEngedi.models.dtos.Guest;
-import com.tyler.YouthEngedi.models.events.ContinueAsGuestEvent;
-import com.tyler.YouthEngedi.models.events.UserLoginEvent;
-import com.tyler.YouthEngedi.models.events.UserLogoutEvent;
+import com.tyler.YouthEngedi.models.dtos.ImageRequest;
+import com.tyler.YouthEngedi.models.events.*;
 
 import java.time.LocalDateTime;
 
@@ -44,6 +44,25 @@ public final class WebSocketHelper {
                 .email(existingGuest.getFakeEmail())
                 .message(existingGuest.getFakeEmail() + " has logged out at " + TimeUtils.formatDateTime(LocalDateTime.now()))
                 .userId(existingGuest.getFakeUserId())
+                .timeStamp(System.currentTimeMillis())
+                .build();
+    }
+
+    public static ImageUploadEvent buildImageUpload(Image image,User user){
+        return ImageUploadEvent.builder()
+                .email(user.getEmail())
+                .userId(user.getId())
+                .message(user.getName() + " uploaded a image " + image.getAlt() + " at " + TimeUtils.formatDateTime(LocalDateTime.now()))
+                .timeStamp(System.currentTimeMillis())
+                .build();
+    }
+
+    public static ImageFlaggedEvent buildImageFlagged(ImageRequest request,Image image,User user) {
+        var time = TimeUtils.formatDateTime(LocalDateTime.now());
+        return ImageFlaggedEvent.builder()
+                .email(user.getEmail())
+                .userId(user.getId())
+                .message(image.getAlt() + " was flagged for NSFW content by the system at" + time + ", request status was " + request.getStatus())
                 .timeStamp(System.currentTimeMillis())
                 .build();
     }

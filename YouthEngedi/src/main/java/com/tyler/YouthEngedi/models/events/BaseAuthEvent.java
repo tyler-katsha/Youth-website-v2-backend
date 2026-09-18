@@ -6,7 +6,7 @@ import lombok.experimental.SuperBuilder;
 
 @Getter
 @SuperBuilder
-public abstract class BaseAuthEvent {
+public sealed class BaseAuthEvent permits ImageUploadEvent,ImageFlaggedEvent,UserLogoutEvent,UserLoginEvent,WebSocketEvent,ContinueAsGuestEvent {
     private final String email;
     private final Long userId;
     private final String message;

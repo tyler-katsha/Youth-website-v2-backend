@@ -7,6 +7,6 @@ import lombok.experimental.SuperBuilder;
 @Getter
 @ToString(callSuper = true)
 @SuperBuilder
-public class WebSocketEvent extends BaseAuthEvent{
+public final class WebSocketEvent extends BaseAuthEvent{
     private ConnectionType connectionType;
 }

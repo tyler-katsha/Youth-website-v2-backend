@@ -1,5 +1,6 @@
 package com.tyler.YouthEngedi.controllers;
 
+import com.cloudinary.Api;
 import com.tyler.YouthEngedi.Exceptions.ExplicitContentException;
 import com.tyler.YouthEngedi.Exceptions.ImageException;
 import com.tyler.YouthEngedi.Exceptions.RateLimitExceededException;
@@ -8,6 +9,7 @@ import com.tyler.YouthEngedi.annotations.RateLimited;
 import com.tyler.YouthEngedi.models.UserPrincipal;
 import com.tyler.YouthEngedi.models.dtos.ApiResult;
 import com.tyler.YouthEngedi.models.dtos.FragmentedImage;
+import com.tyler.YouthEngedi.models.dtos.ImageRequest;
 import com.tyler.YouthEngedi.services.ImageService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -24,15 +26,12 @@ import org.springframework.web.multipart.MultipartFile;
 import java.time.temporal.ChronoUnit;
 
 @RestController
+@RequiredArgsConstructor
 @RequestMapping("/api/v1")
 @Tag(name="Image Management",description = "Api for fetching and managing images")
 public class ImageController {
 
     private final ImageService imageService;
-
-    public ImageController(ImageService imageService){
-        this.imageService = imageService;
-    }
 
     @RateLimited(capacity = 100,tokens = 100,duration = 10,unit = ChronoUnit.SECONDS)
     @PreAuthorize("hasAnyRole('ADMIN','MEMBER','YOUTH_LEADER')")
@@ -49,11 +48,11 @@ public class ImageController {
          } catch (RateLimitExceededException e){
              return new ResponseEntity<>(new ApiResult(false,e.getMessage()),HttpStatus.TOO_MANY_REQUESTS);
          } catch (Exception e){
-             return new ResponseEntity<>(new ApiResult(false,"Something went wrong. Please try again later."),HttpStatus.INTERNAL_SERVER_ERROR);
+             return new ResponseEntity<>(new ApiResult(false,e.getMessage()),HttpStatus.INTERNAL_SERVER_ERROR);
          }
     }
 
-    @RateLimited(capacity = 100,tokens = 100,duration = 10,unit = ChronoUnit.SECONDS)
+    @RateLimited
     @PreAuthorize("hasAnyRole('ADMIN','MEMBER','YOUTH_LEADER')")
     @PostMapping(value="/images/upload",consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "uploads image into Object Storage")
@@ -75,7 +74,7 @@ public class ImageController {
         }
     }
 
-    @RateLimited(capacity = 100,tokens = 100,duration = 10,unit = ChronoUnit.SECONDS)
+    @RateLimited
     @PreAuthorize("hasAnyRole('ADMIN','MEMBER','YOUTH_LEADER')")
     @PostMapping(value="/images/upload-chunks",consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "Split image into fragments and uploads it into Object Storage")
@@ -95,7 +94,7 @@ public class ImageController {
         }
     }
 
-    @RateLimited(capacity = 100,tokens = 100,duration = 10,unit = ChronoUnit.SECONDS)
+    @RateLimited
     @PreAuthorize("hasAnyRole('ADMIN','MEMBER','YOUTH_LEADER')")
     @DeleteMapping("/images/{id}")
     @Operation(summary = "Deletes image based on id")
@@ -107,6 +106,30 @@ public class ImageController {
         try{
             imageService.deleteImage(id);
             return ResponseEntity.ok(new ApiResult(true,"Image Deleted"));
+        } catch(ResourceNotFoundException e){
+            return new ResponseEntity<>(new ApiResult(false,"Image not found"),HttpStatus.NOT_FOUND);
+        } catch (ImageException e){
+            return new ResponseEntity<>(new ApiResult(false,"Unable to upload image"),HttpStatus.BAD_REQUEST);
+        } catch (RateLimitExceededException e){
+            return new ResponseEntity<>(new ApiResult(false,e.getMessage()),HttpStatus.TOO_MANY_REQUESTS);
+        } catch (Exception e){
+            return new ResponseEntity<>(new ApiResult(false,"Something went wrong. Please try again later."),HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @RateLimited
+    @PreAuthorize("hasAnyRole('ADMIN','YOUTH_LEADER','MEMER')")
+    @PatchMapping("/images/{id}/flag")
+    @Operation(summary = "Flags an image for review", description = "Flags an image based on its ID for further review or moderation.")
+    @ApiResponse(responseCode = "200", description = "Successfully flagged image")
+    @ApiResponse(responseCode = "404", description = "Image not found based on ID")
+    @ApiResponse(responseCode = "400", description = "Invalid image request")
+    @ApiResponse(responseCode = "429", description = "Rate limit exceeded")
+    @ApiResponse(responseCode = "500", description = "Something went wrong while flagging the image")
+    public ResponseEntity<ApiResult> flagImage(@PathVariable long id,@RequestBody ImageRequest request){
+        try{
+            imageService.flagImage(id,request);
+            return ResponseEntity.ok(new ApiResult(true,"Image was flagged"));
         } catch(ResourceNotFoundException e){
             return new ResponseEntity<>(new ApiResult(false,"Image not found"),HttpStatus.NOT_FOUND);
         } catch (ImageException e){

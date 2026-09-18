@@ -6,6 +6,7 @@ import com.tyler.YouthEngedi.models.ContactSubmission;
 import com.tyler.YouthEngedi.models.dtos.EmailRequest;
 import com.tyler.YouthEngedi.utils.HtmlTemplate;
 import jakarta.mail.internet.MimeMessage;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -19,6 +20,7 @@ import org.xbill.DNS.Type;
 import java.time.LocalDateTime;
 
 @Service
+@RequiredArgsConstructor
 public class EmailService {
 
     @Value("${spring.mail.youth.email}")
@@ -27,10 +29,6 @@ public class EmailService {
     private final ContactSubmissionRepository contactSubmissionRepository;
     private final JavaMailSender mailSender;
 
-    public EmailService(ContactSubmissionRepository contactSubmissionRepository, JavaMailSender mailSender) {
-        this.contactSubmissionRepository = contactSubmissionRepository;
-        this.mailSender = mailSender;
-    }
 
     @Async
     public void sendEmail(EmailRequest request) {

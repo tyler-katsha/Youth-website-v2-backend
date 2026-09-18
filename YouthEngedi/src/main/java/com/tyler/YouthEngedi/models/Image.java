@@ -27,7 +27,9 @@ public class Image implements Serializable {
     private String imageUrl;
     private String alt;
     private String size;
-    private long postedBy;
+    private String postedBy;
+    private long userId;
+    private boolean flagged;
     @CreatedDate
     private LocalDateTime createdAt;
 }

@@ -61,6 +61,12 @@ public class TlsFingerprintFilter extends OncePerRequestFilter {
             return;
         }
 
+        if(BotFingerprintSignatures.CHROME_FAMILY_JA3.contains(ja3)){
+            logger.warn("Blocked request with blacklisted bot Chrome JA3: {} (UA: {})", ja3, userAgent);
+            writeErrorResponse(response, HttpStatus.FORBIDDEN, "Access denied: automated client detected");
+            return;
+        }
+
         if (userAgent != null && BotFingerprintSignatures.BROWSER_UA_PATTERN.matcher(userAgent).matches()) {
             if (BotFingerprintSignatures.KNOWN_BOT_JA3.contains(ja3)) {
                 logger.warn("UA Spoofing detected! UA: '{}' accompanied by Bot JA3: {}", userAgent, ja3);

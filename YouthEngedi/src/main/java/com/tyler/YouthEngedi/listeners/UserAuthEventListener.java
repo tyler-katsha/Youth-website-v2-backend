@@ -39,6 +39,18 @@ public class UserAuthEventListener {
         processAndBroadcast(event,ConnectionType.CONTINUE_AS_GUEST);
     }
 
+    @Async
+    @EventListener
+    public void handleImageUploads(ImageUploadEvent event){
+        processAndBroadcast(event,ConnectionType.IMAGE_UPLOAD);
+    }
+
+    @Async
+    @EventListener
+    public void handleImageFlags(ImageFlaggedEvent event){
+        processAndBroadcast(event,ConnectionType.FLAGGED_IMAGE);
+    }
+
     private void processAndBroadcast(BaseAuthEvent event,ConnectionType type){
         var socketEvent = WebSocketEvent.builder()
                 .connectionType(type)

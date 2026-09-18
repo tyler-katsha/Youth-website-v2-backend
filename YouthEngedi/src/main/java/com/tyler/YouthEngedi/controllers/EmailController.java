@@ -28,8 +28,6 @@ import java.util.concurrent.CompletableFuture;
 
 import static com.tyler.YouthEngedi.constants.UrlConstants.*;
 
-//import java.util.concurrent.CompletableFuture;
-
 @RestController
 @RequestMapping("/api/v1/email")
 @RequiredArgsConstructor

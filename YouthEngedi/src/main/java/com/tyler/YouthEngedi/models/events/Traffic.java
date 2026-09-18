@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class Traffic {
+public final class Traffic {
     @JsonProperty("event")
     private WebSocketEvent webSocketEvent;
     @JsonProperty("currentSize")

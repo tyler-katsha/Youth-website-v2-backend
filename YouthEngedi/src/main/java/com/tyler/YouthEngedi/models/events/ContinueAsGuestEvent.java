@@ -6,4 +6,4 @@ import lombok.experimental.SuperBuilder;
 @Getter
 @ToString(callSuper = true)
 @SuperBuilder
-public class ContinueAsGuestEvent extends BaseAuthEvent{}
+public final class ContinueAsGuestEvent extends BaseAuthEvent{}

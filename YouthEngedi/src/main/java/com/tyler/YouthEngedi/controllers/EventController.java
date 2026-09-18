@@ -20,15 +20,12 @@ import org.springframework.web.bind.annotation.*;
 import java.time.temporal.ChronoUnit;
 
 @RestController
+@RequiredArgsConstructor
 @RequestMapping("/api/v1/event")
 @Tag(name="Event Management",description = "Api for fetching and managing events")
 public class EventController {
 
     private final EventService eventService;
-
-    public EventController(EventService eventService){
-        this.eventService = eventService;
-    }
 
     @RateLimited(unit = ChronoUnit.MINUTES)
     @PreAuthorize("hasAnyRole('ADMIN','YOUTH_LEADER')")

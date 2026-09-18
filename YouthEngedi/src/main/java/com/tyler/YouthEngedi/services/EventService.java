@@ -17,6 +17,7 @@ import com.tyler.YouthEngedi.models.mappers.EventMapper;
 import com.tyler.YouthEngedi.redis.GenericRedisService;
 import com.tyler.YouthEngedi.utils.TimeUtils;
 import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -28,6 +29,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class EventService {
 
     private final EventRepository eventRepository;
@@ -40,14 +42,6 @@ public class EventService {
     private static final String EVENT_ID_KEY_PREFIX = "event:id:";
     private final static Duration EVENT_CACHE_TTL = Duration.ofHours(1);
     private static final Duration PAGE_CACHE_TTL = Duration.ofMinutes(15);
-
-    public EventService(EventRepository eventRepository,UserRepository userRepository,AnnouncementRepository announcementRepository,EventMapper mapper,GenericRedisService redisService){
-        this.announcementRepository = announcementRepository;
-        this.eventRepository = eventRepository;
-        this.eventMapper = mapper;
-        this.userRepository = userRepository;
-        this.redisService = redisService;
-    }
 
     public EventResponse createEvent(EventRequest request,long userId){
 

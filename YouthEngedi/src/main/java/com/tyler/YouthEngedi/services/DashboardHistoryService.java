@@ -3,6 +3,7 @@ package com.tyler.YouthEngedi.services;
 import com.tyler.YouthEngedi.models.enums.ConnectionType;
 import com.tyler.YouthEngedi.models.events.WebSocketEvent;
 import com.tyler.YouthEngedi.utils.GuestManager;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -12,6 +13,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedDeque;
 
 @Service
+@RequiredArgsConstructor
 public class DashboardHistoryService {
 
     private static final int MAX_EVENTS = 50;

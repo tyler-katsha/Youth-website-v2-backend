@@ -6,4 +6,4 @@ import lombok.experimental.SuperBuilder;
 @Getter
 @ToString(callSuper = true)
 @SuperBuilder
-public class UserLogoutEvent extends BaseAuthEvent{}
+public final class UserLogoutEvent extends BaseAuthEvent{}

@@ -6,6 +6,7 @@ import com.tyler.YouthEngedi.models.AuditLog;
 import com.tyler.YouthEngedi.models.Performance;
 import com.tyler.YouthEngedi.models.dtos.CachedPageResponse;
 import com.tyler.YouthEngedi.redis.GenericRedisService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -14,6 +15,7 @@ import org.springframework.stereotype.Service;
 import java.time.Duration;
 
 @Service
+@RequiredArgsConstructor
 public class AdminService {
 
     private final AuditRepository auditRepository;
@@ -24,11 +26,6 @@ public class AdminService {
     private static final String ADMIN_PERFORMANCE_PAGE_KEY_PREFIX = "performances:page:";
     private static final Duration PAGE_CACHE_TTL = Duration.ofMinutes(15);
 
-    public AdminService(AuditRepository auditRepository,PerformanceRepository performanceRepository,GenericRedisService redisService){
-        this.auditRepository = auditRepository;
-        this.performanceRepository = performanceRepository;
-        this.redisService = redisService;
-    }
     public Page<AuditLog> getSystemLogs(int page, int size){
         var cacheKey = ADMIN_LOGS_PAGE_KEY_PREFIX + page + ":size:" + size;
 

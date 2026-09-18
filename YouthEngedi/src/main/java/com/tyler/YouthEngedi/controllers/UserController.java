@@ -25,15 +25,12 @@ import java.time.temporal.ChronoUnit;
 
 
 @RestController
+@RequiredArgsConstructor
 @RequestMapping("/api/v1")
 @Tag(name=" User Management", description = "Api for fetching and managing users")
 public class UserController {
 
     private final UserService userService;
-
-    public UserController(UserService userService){
-        this.userService = userService;
-    }
 
     @RateLimited(capacity = 100,tokens = 100,duration = 10,unit = ChronoUnit.SECONDS)
     @PreAuthorize("hasAnyRole('ADMIN','YOUTH_LEADER')")

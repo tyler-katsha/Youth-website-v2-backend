@@ -24,8 +24,9 @@ public class PythonService {
     private final RestClient restClient;
     private final CircuitBreaker circuitBreaker;
     private final String targetUri;
+    private final LocalNsfwFallbackService localNsfwFallbackService;
 
-    public PythonService(CircuitBreakerFactory<?, ?> circuitBreakerFactory) {
+    public PythonService(CircuitBreakerFactory<?, ?> circuitBreakerFactory,LocalNsfwFallbackService localNsfwFallbackService) {
 
         // Enforce strict timeouts so slow requests don't exhaust the Tomcat thread pool
         SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
@@ -38,6 +39,7 @@ public class PythonService {
 
         this.circuitBreaker = circuitBreakerFactory.create("pythonService");
         this.targetUri = production ? PYTHON_PREDICTION_PROD : PYTHON_PREDICTION_DEV;
+        this.localNsfwFallbackService = localNsfwFallbackService;
     }
 
     public PredictionResponse getPrediction(PredictionRequest request) {
@@ -54,11 +56,22 @@ public class PythonService {
     }
 
     private PredictionResponse predictionFallback(Throwable throwable, PredictionRequest request) {
-        logger.warn("Python prediction call failed or circuit is open: {}", throwable.getMessage());
+        logger.warn("Python prediction service unavailable ({}). Triggering fallback.", throwable.toString());
 
         // Fail-closed to avoid accidental security/validation exploits during outages
+
+        boolean isSafe = false;
+        try {
+            // Guard fallback execution so failures here don't bubble unhandled 500s
+            isSafe = localNsfwFallbackService.isSafe(request.getPath());
+        } catch (Exception ex) {
+            logger.error("Local NSFW fallback failed for path: {}. Defaulting to fail-closed.", request.getPath(), ex);
+        }
+
+        logger.debug("Local NSFW fallback outcome: approved={} for path={}", isSafe, request.getPath());
+
         return PredictionResponse.builder()
-                .approved(false)
+                .approved(isSafe)
                 .detections(List.of())
                 .build();
     }

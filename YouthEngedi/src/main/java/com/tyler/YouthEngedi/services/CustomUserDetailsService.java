@@ -4,6 +4,7 @@ import com.tyler.YouthEngedi.Exceptions.ResourceNotFoundException;
 import com.tyler.YouthEngedi.Repository.UserRepository;
 import com.tyler.YouthEngedi.models.User;
 import com.tyler.YouthEngedi.models.UserPrincipal;
+import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.NullMarked;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -14,13 +15,11 @@ import org.springframework.stereotype.Service;
 import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
 public class CustomUserDetailsService implements UserDetailsService {
 
     private final UserRepository userRepository;
 
-    public CustomUserDetailsService(UserRepository repository){
-        this.userRepository = repository;
-    }
 
     @Override
     @NullMarked

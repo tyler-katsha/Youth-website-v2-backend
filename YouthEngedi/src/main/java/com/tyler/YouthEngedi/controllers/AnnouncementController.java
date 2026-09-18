@@ -18,15 +18,13 @@ import org.springframework.web.bind.annotation.*;
 import java.time.temporal.ChronoUnit;
 
 @RestController
+@RequiredArgsConstructor
 @RequestMapping("/api/v1")
 @Tag(name="Announcement Management",description = "Api fetching and managing announcements based features")
 public class AnnouncementController {
 
     private final AnnouncementService announcementService;
 
-    public AnnouncementController(AnnouncementService announcementService){
-        this.announcementService = announcementService;
-    }
 
     @RateLimited(capacity = 100,tokens = 100,duration = 10,unit = ChronoUnit.SECONDS)
     @PreAuthorize("hasAnyRole('ADMIN','YOUTH_LEADER','MEMBER')")

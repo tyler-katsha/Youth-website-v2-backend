@@ -30,6 +30,7 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 @RestController
+@RequiredArgsConstructor
 @RequestMapping("/api/v1/auth")
 @Tag(name="Authentication Management",description = "Api for managing non-secure based endpoints")
 public class AuthenticationController {
@@ -37,12 +38,6 @@ public class AuthenticationController {
     private final UserService userService;
     private final EmailService emailService;
     private final VerificationTokenRepository verificationTokenRepository;
-
-    public AuthenticationController(UserService userService,EmailService emailService,VerificationTokenRepository verificationTokenRepository){
-        this.userService = userService;
-        this.emailService = emailService;
-        this.verificationTokenRepository = verificationTokenRepository;
-    }
 
     @RateLimited(capacity = 5,tokens = 5,unit = ChronoUnit.MINUTES)
     @PostMapping(value="/register", consumes=MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -149,7 +144,7 @@ public class AuthenticationController {
             var user = verificationToken.getUser();
 
             CompletableFuture.runAsync(() -> {
-                userService.toggleEnabled(user,true);
+                userService.toggleEnabled(user);
             });
 
             verificationTokenRepository.delete(verificationToken);

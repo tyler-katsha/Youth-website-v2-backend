@@ -8,6 +8,7 @@ import com.tyler.YouthEngedi.models.dtos.PredictionResponse;
 import com.tyler.YouthEngedi.services.PythonService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -18,15 +19,11 @@ import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 @RestController
+@RequiredArgsConstructor
 @RequestMapping("/api/v1/python")
 public class PythonController {
 
     private final PythonService pythonService;
-
-    public PythonController(PythonService pythonService){
-        this.pythonService = pythonService;
-    }
-
 
     @RateLimited(unit = ChronoUnit.MINUTES)
     @PreAuthorize("hasRole('ADMIN')")

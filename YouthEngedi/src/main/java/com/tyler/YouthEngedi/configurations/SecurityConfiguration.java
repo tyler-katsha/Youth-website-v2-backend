@@ -2,7 +2,8 @@ package com.tyler.YouthEngedi.configurations;
 
 import com.tyler.YouthEngedi.filters.JwtAuthenticationFilter;
 import com.tyler.YouthEngedi.models.enums.Role;
-import jakarta.servlet.http.HttpServletResponse;
+import com.tyler.YouthEngedi.oauth.OAuth2AuthenticationSuccessHandler;
+import com.tyler.YouthEngedi.oauth.OAuth2FailureHandler;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -21,7 +22,6 @@ import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.security.web.authentication.logout.LogoutFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;

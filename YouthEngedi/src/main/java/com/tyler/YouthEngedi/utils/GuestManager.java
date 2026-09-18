@@ -18,11 +18,8 @@ public final class GuestManager {
         return removed;
     }
 
-    public static boolean addGuest(Guest guest){
-        if(guest == null){
-            return false;
-        }
-        return GUESTS.putIfAbsent(guest.getFakeUserId(), guest) == null;
+    public static void addGuest(Guest guest){
+        GUESTS.putIfAbsent(guest.getFakeUserId(), guest);
     }
 
     public static Guest fetchGuest(long fakeUserId){

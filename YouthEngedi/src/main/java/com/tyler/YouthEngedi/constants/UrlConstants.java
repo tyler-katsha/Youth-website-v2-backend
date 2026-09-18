@@ -4,7 +4,7 @@ import org.springframework.beans.factory.annotation.Value;
 
 public class UrlConstants {
 
-    @Value("${app.production:true}")
+    @Value("${app.production:false}")
     public static boolean production;
     public final static String FRONTEND_URL_DEV = "http://localhost:5173/";
 
